@@ -83,7 +83,17 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
+    if (strncmp(p, "==", 2) == 0 ||
+        strncmp(p, ">=", 2) == 0 ||
+        strncmp(p, "<=", 2) == 0 ||
+        strncmp(p, "!=", 2) == 0) {
+      cur = new_token(TK_RESERVED, cur, p, 2);
+      p += 2;
+      continue;
+    }
+
+    if (*p == '+' || *p == '-' || *p == '*' || *p == '/' ||
+        *p == '(' || *p == ')' || *p == '<' || *p == '>') {
       cur = new_token(TK_RESERVED, cur, p++, 1);
       continue;
     }
@@ -146,6 +156,12 @@ typedef enum {
   ND_SUB, // -
   ND_MUL, // *
   ND_DIV, // /
+  ND_LT,  // <
+  ND_LE,  // <=
+  ND_GT,  // >
+  ND_GE,  // >=
+  ND_EQ,  // ==
+  ND_NEQ, // !=
   ND_NUM, // Decimal Number
 } NodeKind;
 
@@ -177,12 +193,49 @@ Node *new_node_num(int val) {
   return node;
 }
 
-Node *expr();    // = mul ("+" mul | "-" mul)*
-Node *mul();     // = unary ("*" unary | "/" unary)*
-Node *unary();   // = ("+" | "-")? primary
-Node *primary(); // = num | "(" expr ")"
+Node *expr();       // = equality
+Node *equality();   // = relational ("==" relational | "!=" relational)*
+Node *relational(); // = add ("<" add | "<=" add | ">" add | ">=" add)*
+Node *add();        // = mul ("+" mul | "-" mul)*
+Node *mul();        // = unary ("*" unary | "/" unary)*
+Node *unary();      // = ("+" | "-")? primary
+Node *primary();    // = num | "(" expr ")"
 
 Node *expr() {
+  return equality();
+}
+
+Node *equality() {
+  Node *node = relational();
+
+  for(;;) {
+    if (consume("=="))
+      node = new_node(ND_EQ, node, relational());
+    else if (consume("!="))
+      node = new_node(ND_NEQ, node, relational());
+    else
+      return node;
+  }
+}
+
+Node *relational() {
+  Node *node = add();
+
+  for (;;) {
+    if (consume("<"))
+      node = new_node(ND_LT, node, add());
+    else if (consume("<="))
+      node = new_node(ND_LE, node, add());
+    else if (consume(">"))
+      node = new_node(ND_GT, node, add());
+    else if (consume(">="))
+      node = new_node(ND_GE, node, add());
+    else
+      return node;
+  }
+}
+
+Node *add() {
   Node *node = mul();
 
   for (;;) {
