@@ -171,9 +171,9 @@ Node *new_node_num(int val) {
   return node;
 }
 
-Node *expr();
-Node *mul();
-Node *primary();
+Node *expr();    // = mul ("+" mul | "-" mul)*
+Node *mul();     // = primary ("*" mul | "/" mul)*
+Node *primary(); // = num | "(" expr ")"
 
 Node *expr() {
   Node *node = mul();
