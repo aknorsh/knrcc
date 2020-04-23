@@ -172,7 +172,8 @@ Node *new_node_num(int val) {
 }
 
 Node *expr();    // = mul ("+" mul | "-" mul)*
-Node *mul();     // = primary ("*" mul | "/" mul)*
+Node *mul();     // = unary ("*" unary | "/" unary)*
+Node *unary();   // = ("+" | "-")? primary
 Node *primary(); // = num | "(" expr ")"
 
 Node *expr() {
