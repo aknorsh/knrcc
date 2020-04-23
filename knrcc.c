@@ -5,31 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Token enum
-typedef enum {
-  TK_RESERVED, // Symbol
-  TK_NUM,      // Number
-  TK_EOF,      // rep. end of input
-} TokenKind;
-
-typedef struct Token Token;
-
-// Type: Token
-struct Token {
-  TokenKind kind; // kind of token
-  Token *next;    // next token
-  int val;        // stored value (int)
-  char *str;      // stored value (char)
-};
-
-// Current Token
-Token *token;
-
-// Input source code
-char *user_input;
-
-// -------------------
-
 // Report error
 // args are the same as printf
 void error(char *fmt, ...) {
@@ -54,34 +29,34 @@ void error_at(char *loc, char *fmt, ...) {
 }
 
 // -------------------
+// Definition: token
+// -------------------
 
-// if next token is expected, eat 1 token and ret. true; else, ret. false.
-bool consume(char op) {
-  if (token->kind != TK_RESERVED || token->str[0] != op)
-    return false;
-  token = token->next;
-  return true;
-}
+// Token enum
+typedef enum {
+  TK_RESERVED, // Symbol
+  TK_NUM,      // Number
+  TK_EOF,      // rep. end of input
+} TokenKind;
 
-// if next token is expected, eat 1 token; else, assert error.
-void expect(char op) {
-  if (token->kind != TK_RESERVED || token->str[0] != op)
-    error_at(token->str, "It is not '%c'", op);
-  token = token->next;
-}
+typedef struct Token Token;
 
-int expect_number() {
-  if (token->kind != TK_NUM)
-    error_at(token->str, "It is not Number.");
-  int val = token->val;
-  token = token->next;
-  return val;
-}
+// Type: Token
+struct Token {
+  TokenKind kind; // kind of token
+  Token *next;    // next token
+  int val;        // stored value (int)
+  char *str;      // stored value (char)
+};
 
-bool at_eof() {
-  return token->kind == TK_EOF;
-}
+// Current Token
+Token *token;
 
+// Input source code
+char *user_input;
+
+// -------------------
+// Tokenize: source code -> Token Series
 // -------------------
 
 // Generate new token with kind and joint it to cur.
@@ -125,6 +100,39 @@ Token *tokenize(char *p) {
 }
 
 // -------------------
+// Util. to process token series
+// -------------------
+
+// if next token is expected, eat 1 token and ret. true; else, ret. false.
+bool consume(char op) {
+  if (token->kind != TK_RESERVED || token->str[0] != op)
+    return false;
+  token = token->next;
+  return true;
+}
+
+// if next token is expected, eat 1 token; else, assert error.
+void expect(char op) {
+  if (token->kind != TK_RESERVED || token->str[0] != op)
+    error_at(token->str, "It is not '%c'", op);
+  token = token->next;
+}
+
+int expect_number() {
+  if (token->kind != TK_NUM)
+    error_at(token->str, "It is not Number.");
+  int val = token->val;
+  token = token->next;
+  return val;
+}
+
+bool at_eof() {
+  return token->kind == TK_EOF;
+}
+
+// -------------------
+// Definition: AST
+// -------------------
 
 // Kind of Nodes in AST
 typedef enum {
@@ -143,6 +151,10 @@ struct Node {
   Node *rhs;     // Right hand side
   int val;       // used when kind is ND_NUM
 };
+
+// -------------------
+// Parse: Token Series -> AST
+// -------------------
 
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = calloc(1, sizeof(Node));
@@ -202,6 +214,8 @@ Node *primary() {
 }
 
 // -------------------
+// AST -> Asm
+// -------------------
 
 void gen(Node *node) {
   if (node->kind == ND_NUM) {
@@ -233,7 +247,6 @@ void gen(Node *node) {
 
   printf("  push rax\n");
 }
-
 
 // -------------------
 
