@@ -86,6 +86,12 @@ void tokenize() {
       continue;
     }
 
+    if (strncmp(p, "while", 5) == 0 && !is_alnum(p[5])) {
+      cur = new_token(TK_WHILE, cur, p, 5);
+      p += 5;
+      continue;
+    }
+
     // lvar
 
     if (('a' <= *p && *p <= 'z') || *p == '_') {

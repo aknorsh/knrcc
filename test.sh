@@ -48,4 +48,5 @@ assert 3 "one=1;two=2;return one*2+two-1;"
 assert 4 "a=2;if(a>0)return 4;"
 assert 4 "a=2;if(a<0)return 3;else return 4;"
 assert 4 "a=2;if(a<0)return 3;else if(a==0)return 2;else return 4;"
+assert 4 "a=1;while(a!=4)a=a+1;a;"
 echo OK

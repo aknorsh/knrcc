@@ -54,6 +54,17 @@ void gen(Node *node) {
       gen(node->elbody);
       printf(".Lend%s:\n", key);
       return;
+    case ND_WHILE:
+      key = yield_key();
+      printf(".Lbegin%s:\n", key);
+      gen(node->cond);
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .Lend%s\n", key);
+      gen(node->body);
+      printf("  jmp .Lbegin%s\n", key);
+      printf(".Lend%s:\n", key);
+      return;
     case ND_NUM:
       printf("  push %d\n", node->val);
       return;

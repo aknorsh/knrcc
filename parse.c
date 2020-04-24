@@ -32,6 +32,7 @@ void program();     // = stmt*
 Node *stmt();       // = expr ";"
                     // | "return" expr ";"
                     // | "if" "(" expr ")" stmt ("else" stmt)?
+                    // | "while" "(" expr ")" stmt
 Node *expr();       // = assign
 Node *assign();     // = equality ("=" assign)?
 Node *equality();   // = relational ("==" relational | "!=" relational)*
@@ -49,7 +50,6 @@ void program() {
   code[i] = NULL;
 }
 
-                    // | "if" "(" expr ")" stmt ("else" stmt)?
 Node *stmt() {
   Node *node;
 
@@ -70,6 +70,14 @@ Node *stmt() {
       node->kind = ND_IFELSE;
       node->elbody = stmt();
     }
+  }
+  else if (consume_keyword(TK_WHILE)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_WHILE;
+    expect("(");
+    node->cond = expr();
+    expect(")");
+    node->body = stmt();
   }
   else {
     node = expr();
