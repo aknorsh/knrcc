@@ -29,7 +29,7 @@ Node *new_node_ident(char *ident) {
 }
 
 void program();    // = stmt*
-Node *stmt();       // = expr ";"
+Node *stmt();       // = expr ";" | "return" expr ";"
 Node *expr();       // = assign
 Node *assign();     // = equality ("=" assign)?
 Node *equality();   // = relational ("==" relational | "!=" relational)*
@@ -48,7 +48,15 @@ void program() {
 }
 
 Node *stmt() {
-  Node *node = expr();
+  Node *node;
+
+  if (consume_keyword(TK_RETURN)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_RETURN;
+    node->lhs = expr();
+  } else {
+    node = expr();
+  }
   expect(";");
   return node;
 }

@@ -9,17 +9,21 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
   return tok;
 }
 
+int is_alnum(char c) {
+  return ('a' <= c && c <= 'z') ||
+         ('A' <= c && c <= 'Z') ||
+         ('0' <= c && c <= '9') ||
+         (c == '_');
+}
+
 Token *new_token_ident(Token *cur, char *str)
 {
   char *runner = str;
   int len = 0;
-  while (*runner == '_' ||
-      ('A' <= *runner && *runner <= 'Z') ||
-      ('a' <= *runner && *runner <= 'z') ||
-      ('0' <= *runner && *runner <= '9')) {
-        runner ++;
-        len ++;
-      }
+  while (is_alnum(*runner)) {
+    runner ++;
+    len ++;
+  }
 
   char *ident = calloc(len, sizeof(char) + 1);
   memcpy(ident, str, sizeof(char) * len);
@@ -62,6 +66,12 @@ void tokenize() {
       continue;
     }
 
+    if (strncmp (p, "return", 6) == 0 && !is_alnum(p[6])) {
+      cur = new_token(TK_RETURN, cur, p, 6);
+      p += 6;
+      continue;
+    }
+
     if (('a' <= *p && *p <= 'z') || *p == '_') {
       cur = new_token_ident(cur, p);
       p += cur->len;
@@ -87,6 +97,13 @@ bool consume(char *op) {
   if (token->kind != TK_RESERVED ||
       strlen(op) != token->len ||
       memcmp(token->str, op, token->len))
+    return false;
+  token = token->next;
+  return true;
+}
+
+bool consume_keyword(TokenKind tk) {
+  if (token->kind != tk)
     return false;
   token = token->next;
   return true;

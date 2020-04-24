@@ -42,4 +42,7 @@ assert 3 "n=2;n=n+1;n;"
 assert 3 "y=1;z=2;y+z;"
 assert 3 "f_=1;b2=2;f_+b2;"
 
+assert 4 "return 4; return 5; return 6;"
+assert 4 "one=1;two=2;return one*2+two;"
+
 echo OK

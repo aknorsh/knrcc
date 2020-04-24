@@ -11,7 +11,8 @@ typedef enum {
   TK_RESERVED, // Symbol
   TK_IDENT,    // Identifier
   TK_NUM,      // Number
-  TK_EOF,      // rep. end of input
+  TK_EOF,      // End of file
+  TK_RETURN,   // return
 } TokenKind;
 
 typedef struct Token Token;
@@ -28,6 +29,7 @@ void tokenize();
 
 bool consume(char *op);
 char *consume_ident();
+bool consume_keyword(TokenKind tk);
 void expect(char *op);
 int expect_number();
 bool at_eof();
@@ -35,17 +37,18 @@ bool at_eof();
 // parse.c
 
 typedef enum {
-  ND_ADD, // +
-  ND_SUB, // -
-  ND_MUL, // *
-  ND_DIV, // /
-  ND_LT,  // <
-  ND_LE,  // <=
-  ND_EQ,  // ==
-  ND_NEQ, // !=
-  ND_ASSIGN,// =
-  ND_LVAR,// Identifier
-  ND_NUM, // Decimal Number
+  ND_ADD,    // +
+  ND_SUB,    // -
+  ND_MUL,    // *
+  ND_DIV,    // /
+  ND_LT,     // <
+  ND_LE,     // <=
+  ND_EQ,     // ==
+  ND_NEQ,    // !=
+  ND_ASSIGN, // =
+  ND_LVAR,   // Identifier
+  ND_NUM,    // Decimal Number
+  ND_RETURN, // return
 } NodeKind;
 
 typedef struct Node Node;
