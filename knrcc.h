@@ -27,7 +27,7 @@ struct Token {
 void tokenize();
 
 bool consume(char *op);
-char consume_ident();
+char *consume_ident();
 void expect(char *op);
 int expect_number();
 bool at_eof();
@@ -55,7 +55,7 @@ struct Node {
   Node *lhs;     // Left hand side
   Node *rhs;     // Right hand side
   int val;       // used when kind is ND_NUM
-  int offset;    // used when kind is ND_IDNT
+  int offset;    // used when kind is ND_LVAR
 };
 
 void program();
@@ -64,11 +64,26 @@ void program();
 
 void codegen();
 
+// leftvalue.c
+
+typedef struct LVar LVar;
+
+struct LVar {
+  LVar *next; // next lvar or NULL
+  char *name; // name of lvar
+  int len;    // length of name
+  int offset; // offset from rbp
+};
+
+LVar *find_lvar(char *name);
+LVar *add_lvar(char *name);
+
 // main.c
 
 extern char *user_input;
 extern Token *token;
 extern Node *code[];
+extern LVar *locals;
 
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);

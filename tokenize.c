@@ -9,6 +9,30 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
   return tok;
 }
 
+Token *new_token_ident(Token *cur, char *str)
+{
+  char *runner = str;
+  int len = 0;
+  while (*runner == '_' ||
+      ('A' <= *runner && *runner <= 'Z') ||
+      ('a' <= *runner && *runner <= 'z') ||
+      ('0' <= *runner && *runner <= '9')) {
+        runner ++;
+        len ++;
+      }
+
+  char *ident = calloc(len, sizeof(char) + 1);
+  memcpy(ident, str, sizeof(char) * len);
+  ident[len] = '\0';
+
+  Token *tok = calloc(1, sizeof(Token));
+  tok->kind = TK_IDENT;
+  tok->str = ident;
+  tok->len = len;
+  cur->next = tok;
+  return tok;
+}
+
 void tokenize() {
   char *p = user_input;
   Token head;
@@ -38,8 +62,9 @@ void tokenize() {
       continue;
     }
 
-    if ('a' <= *p && *p <= 'z') {
-      cur = new_token(TK_IDENT, cur, p++, 1);
+    if (('a' <= *p && *p <= 'z') || *p == '_') {
+      cur = new_token_ident(cur, p);
+      p += cur->len;
       continue;
     }
 
@@ -67,11 +92,11 @@ bool consume(char *op) {
   return true;
 }
 
-char consume_ident() { // I want it to return bool....
+char *consume_ident() { // I want it to return bool....
   if (token->kind != TK_IDENT) {
-    return '\0';
+    return NULL;
   }
-  char ident = token->str[0]; // now it is only for single char variable.
+  char *ident = token->str;
   token = token->next;
   return ident;
 }

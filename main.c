@@ -32,6 +32,9 @@ Token *token;
 // AST list
 Node *code[100];
 
+// Local Variable list
+LVar *locals;
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     error("Invalid args");
@@ -43,6 +46,7 @@ int main(int argc, char **argv) {
   program();
 
   codegen();
+
 
   return 0;
 }

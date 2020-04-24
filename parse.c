@@ -15,10 +15,16 @@ Node *new_node_num(int val) {
   return node;
 }
 
-Node *new_node_ident(char ident) {
+Node *new_node_ident(char *ident) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_LVAR;
-  node->offset = (ident - 'a' + 1) * 8;
+
+  // search locals for the same name.
+  LVar *lvar = find_lvar(ident);
+  if (!lvar) {
+    lvar = add_lvar(ident);
+  }
+  node->offset = lvar->offset;
   return node;
 }
 
@@ -132,8 +138,8 @@ Node *primary() {
   }
 
   // = num | ident | "(" expr ")"
-  char ident = consume_ident();
-  if (ident != '\0') {
+  char *ident = consume_ident();
+  if (ident != NULL) {
     return new_node_ident(ident);
   }
 

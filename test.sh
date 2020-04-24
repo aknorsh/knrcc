@@ -40,5 +40,6 @@ assert 3 "0;-1;1;2;3; "
 assert 3 "a=1;a+2*3-4;"
 assert 3 "n=2;n=n+1;n;"
 assert 3 "y=1;z=2;y+z;"
+assert 3 "f_=1;b2=2;f_+b2;"
 
 echo OK
