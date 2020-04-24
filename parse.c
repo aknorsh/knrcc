@@ -15,6 +15,14 @@ Node *new_node_num(int val) {
   return node;
 }
 
+Node *expr();       // = equality
+Node *equality();   // = relational ("==" relational | "!=" relational)*
+Node *relational(); // = add ("<" add | "<=" add | ">" add | ">=" add)*
+Node *add();        // = mul ("+" mul | "-" mul)*
+Node *mul();        // = unary ("*" unary | "/" unary)*
+Node *unary();      // = ("+" | "-")? primary
+Node *primary();    // = num | "(" expr ")"
+
 Node *expr() {
   return equality();
 }

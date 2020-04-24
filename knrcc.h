@@ -5,9 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/**
- *  Type definition
- */
+// tokenize.c
 
 typedef enum {
   TK_RESERVED, // Symbol
@@ -17,7 +15,6 @@ typedef enum {
 
 typedef struct Token Token;
 
-// Type: Token
 struct Token {
   TokenKind kind; // kind of token
   Token *next;    // next token
@@ -25,6 +22,14 @@ struct Token {
   char *str;      // stored value (string)
   int len;        // length of token (string)
 };
+
+Token *tokenize(char *p);
+
+bool consume(char *op);
+void expect(char *op);
+int expect_number();
+
+// parse.c
 
 typedef enum {
   ND_ADD, // +
@@ -47,36 +52,16 @@ struct Node {
   int val;       // used when kind is ND_NUM
 };
 
-/**
- *  Function
- */
-
-// tokenize.c
-Token *new_token(TokenKind kind, Token *cur, char *str, int len);
-Token *tokenize(char *p);
-
-bool consume(char *op);
-void expect(char *op);
-int expect_number();
-bool at_eof();
-
-// parse.c
-Node *new_node(NodeKind kind, Node *lhs, Node *rhs);
-Node *new_node_num(int val);
-
-Node *expr();       // = equality
-Node *equality();   // = relational ("==" relational | "!=" relational)*
-Node *relational(); // = add ("<" add | "<=" add | ">" add | ">=" add)*
-Node *add();        // = mul ("+" mul | "-" mul)*
-Node *mul();        // = unary ("*" unary | "/" unary)*
-Node *unary();      // = ("+" | "-")? primary
-Node *primary();    // = num | "(" expr ")"
+Node *expr();
 
 // codegen.c
-void gen(Node *node);
+
+void codegen(Node *node);
 
 // main.c
+
 extern char *user_input;
 extern Token *token;
-void error_at(char *loc, char *fmt, ...);
+
 void error(char *fmt, ...);
+void error_at(char *loc, char *fmt, ...);

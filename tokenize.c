@@ -1,6 +1,5 @@
 #include "knrcc.h"
 
-// Generate new token with kind and joint it to cur.
 Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = kind;
@@ -10,7 +9,6 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
   return tok;
 }
 
-// Tokenize input string p, and ret. it.
 Token *tokenize(char *p) {
   Token head;
   head.next = NULL;
@@ -51,7 +49,7 @@ Token *tokenize(char *p) {
   return head.next;
 }
 
-// if next token is expected, eat 1 token and ret. true; else, ret. false.
+// Look the next. Eat it and say True, or just say False.
 bool consume(char *op) {
   if (token->kind != TK_RESERVED ||
       strlen(op) != token->len ||
@@ -61,7 +59,7 @@ bool consume(char *op) {
   return true;
 }
 
-// if next token is expected, eat 1 token; else, assert error.
+// Look the next. Eat it or Abort.
 void expect(char *op) {
   if (token->kind != TK_RESERVED ||
       strlen(op) != token->len ||
@@ -70,14 +68,11 @@ void expect(char *op) {
   token = token->next;
 }
 
+// Look the next, to be Num. Eat it or Abort.
 int expect_number() {
   if (token->kind != TK_NUM)
     error_at(token->str, "It is not Number.");
   int val = token->val;
   token = token->next;
   return val;
-}
-
-bool at_eof() {
-  return token->kind == TK_EOF;
 }
