@@ -36,13 +36,16 @@ assert 1 "((0>=1)+1) * (1>=1)     * (1>=0)    ;"
 assert 1 "((0==1)+1) * (1==1)     * ((1==0)+1);"
 assert 1 "(0!=1)     * ((1!=1)+1) * (1!=0)    ;"
 
-assert 3 "0;-1;1;2;3; "
-assert 3 "a=1;a+2*3-4;"
-assert 3 "n=2;n=n+1;n;"
-assert 3 "y=1;z=2;y+z;"
-assert 3 "f_=1;b2=2;f_+b2;"
+assert 2 "-2;-1;0;1;2;"
+assert 2 "a=3;a*2/3;"
+assert 2 "n=1;n=n+1;n;"
+assert 2 "y=5;z=3;y-z;"
+assert 2 "f_=-1;b2=3;f_+b2;"
 
-assert 4 "return 4; return 5; return 6;"
-assert 4 "one=1;two=2;return one*2+two;"
+assert 3 "return 3; return 5; return 6;"
+assert 3 "one=1;two=2;return one*2+two-1;"
 
+assert 4 "a=2;if(a>0)return 4;"
+assert 4 "a=2;if(a<0)return 3;else return 4;"
+assert 4 "a=2;if(a<0)return 3;else if(a==0)return 2;else return 4;"
 echo OK

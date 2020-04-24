@@ -1,5 +1,18 @@
 #include "knrcc.h"
 
+static int _seq_int = 1;
+
+char *yield_key() {
+  char *key = calloc(11, sizeof(char));
+  int cur = _seq_int++;
+  for(int i=0;i<10;i++) {
+    key[i] = '0' + cur % 10;
+    cur/=10;
+  }
+  key[10] = '\0';
+  return key;
+}
+
 void gen_lval(Node *node) {
   if (node->kind != ND_LVAR) {
     error("Left value must be Variable.");
@@ -11,6 +24,7 @@ void gen_lval(Node *node) {
 }
 
 void gen(Node *node) {
+  char *key;
   switch (node->kind) {
     case ND_RETURN:
       gen(node->lhs);
@@ -18,6 +32,27 @@ void gen(Node *node) {
       printf("  mov rsp, rbp\n");
       printf("  pop rbp\n");
       printf("  ret\n");
+      return;
+    case ND_IF:
+      gen(node->cond);
+      key = yield_key();
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .Lend%s\n", key);
+      gen(node->body);
+      printf(".Lend%s:\n", key);
+      return;
+    case ND_IFELSE:
+      gen(node->cond);
+      key = yield_key();
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .Lelse%s\n", key);
+      gen(node->body);
+      printf("  je .Lend%s\n", key);
+      printf(".Lelse%s:\n", key);
+      gen(node->elbody);
+      printf(".Lend%s:\n", key);
       return;
     case ND_NUM:
       printf("  push %d\n", node->val);

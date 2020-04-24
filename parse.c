@@ -28,8 +28,10 @@ Node *new_node_ident(char *ident) {
   return node;
 }
 
-void program();    // = stmt*
-Node *stmt();       // = expr ";" | "return" expr ";"
+void program();     // = stmt*
+Node *stmt();       // = expr ";"
+                    // | "return" expr ";"
+                    // | "if" "(" expr ")" stmt ("else" stmt)?
 Node *expr();       // = assign
 Node *assign();     // = equality ("=" assign)?
 Node *equality();   // = relational ("==" relational | "!=" relational)*
@@ -47,6 +49,7 @@ void program() {
   code[i] = NULL;
 }
 
+                    // | "if" "(" expr ")" stmt ("else" stmt)?
 Node *stmt() {
   Node *node;
 
@@ -54,10 +57,25 @@ Node *stmt() {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
-  } else {
-    node = expr();
+    expect(";");
   }
-  expect(";");
+  else if (consume_keyword(TK_IF)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_IF;
+    expect("(");
+    node->cond = expr();
+    expect(")");
+    node->body = stmt();
+    if (consume_keyword(TK_ELSE)) {
+      node->kind = ND_IFELSE;
+      node->elbody = stmt();
+    }
+  }
+  else {
+    node = expr();
+    expect(";");
+  }
+
   return node;
 }
 

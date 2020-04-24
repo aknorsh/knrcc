@@ -13,6 +13,8 @@ typedef enum {
   TK_NUM,      // Number
   TK_EOF,      // End of file
   TK_RETURN,   // return
+  TK_IF,       // if
+  TK_ELSE,     // else
 } TokenKind;
 
 typedef struct Token Token;
@@ -49,6 +51,8 @@ typedef enum {
   ND_LVAR,   // Identifier
   ND_NUM,    // Decimal Number
   ND_RETURN, // return
+  ND_IF,     // if
+  ND_IFELSE, // if_else
 } NodeKind;
 
 typedef struct Node Node;
@@ -59,6 +63,9 @@ struct Node {
   Node *rhs;     // Right hand side
   int val;       // used when kind is ND_NUM
   int offset;    // used when kind is ND_LVAR
+  Node *cond;    // condition for ND_IF/ND_IFELSE
+  Node *body;    // body for ND_IF/ND_IFELSE
+  Node *elbody;  // else body for ND_IFELSE
 };
 
 void program();
