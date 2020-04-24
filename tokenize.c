@@ -9,7 +9,8 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
   return tok;
 }
 
-Token *tokenize(char *p) {
+void tokenize() {
+  char *p = user_input;
   Token head;
   head.next = NULL;
   Token *cur = &head;
@@ -31,8 +32,14 @@ Token *tokenize(char *p) {
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' ||
-        *p == '(' || *p == ')' || *p == '<' || *p == '>') {
+        *p == '(' || *p == ')' || *p == '<' || *p == '>' ||
+        *p == '=' || *p == ';') {
       cur = new_token(TK_RESERVED, cur, p++, 1);
+      continue;
+    }
+
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++, 1);
       continue;
     }
 
@@ -46,10 +53,11 @@ Token *tokenize(char *p) {
   }
 
   new_token(TK_EOF, cur, p, 0);
-  return head.next;
+  token = head.next;
 }
 
-// Look the next. Eat it and say True, or just say False.
+// consume: Look at the next, and return Boolean
+
 bool consume(char *op) {
   if (token->kind != TK_RESERVED ||
       strlen(op) != token->len ||
@@ -59,20 +67,35 @@ bool consume(char *op) {
   return true;
 }
 
-// Look the next. Eat it or Abort.
+char consume_ident() { // I want it to return bool....
+  if (token->kind != TK_IDENT) {
+    return '\0';
+  }
+  char ident = token->str[0]; // now it is only for single char variable.
+  token = token->next;
+  return ident;
+}
+
+// expect: Look at the next, and Eat Or Abort
+
 void expect(char *op) {
   if (token->kind != TK_RESERVED ||
       strlen(op) != token->len ||
       memcmp(token->str, op, token->len))
-    error_at(token->str, "It is not '%c'", op);
+    error_at(token->str, "It is not '%s'", op);
   token = token->next;
 }
 
-// Look the next, to be Num. Eat it or Abort.
 int expect_number() {
   if (token->kind != TK_NUM)
     error_at(token->str, "It is not Number.");
   int val = token->val;
   token = token->next;
   return val;
+}
+
+// at: Check current token
+
+bool at_eof() {
+  return token->kind == TK_EOF;
 }

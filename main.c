@@ -29,18 +29,20 @@ char *user_input;
 // Current Token
 Token *token;
 
+// AST list
+Node *code[100];
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     error("Invalid args");
     return 1;
   }
+
   user_input = argv[1];
+  tokenize();
+  program();
 
-  token = tokenize(user_input);
-
-  Node *node = expr();
-
-  codegen(node);
+  codegen();
 
   return 0;
 }

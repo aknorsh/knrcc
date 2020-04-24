@@ -15,16 +15,48 @@ Node *new_node_num(int val) {
   return node;
 }
 
-Node *expr();       // = equality
+Node *new_node_ident(char ident) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_LVAR;
+  node->offset = (ident - 'a' + 1) * 8;
+  return node;
+}
+
+void program();    // = stmt*
+Node *stmt();       // = expr ";"
+Node *expr();       // = assign
+Node *assign();     // = equality ("=" assign)?
 Node *equality();   // = relational ("==" relational | "!=" relational)*
 Node *relational(); // = add ("<" add | "<=" add | ">" add | ">=" add)*
 Node *add();        // = mul ("+" mul | "-" mul)*
 Node *mul();        // = unary ("*" unary | "/" unary)*
 Node *unary();      // = ("+" | "-")? primary
-Node *primary();    // = num | "(" expr ")"
+Node *primary();    // = num | ident | "(" expr ")"
+
+void program() {
+  int i = 0;
+  while (!at_eof()) {
+    code[i++] = stmt();
+  }
+  code[i] = NULL;
+}
+
+Node *stmt() {
+  Node *node = expr();
+  expect(";");
+  return node;
+}
 
 Node *expr() {
-  return equality();
+  return assign();
+}
+
+Node *assign() {
+  Node *node = equality();
+  if (consume("=")) {
+    node = new_node(ND_ASSIGN, node, assign());
+  }
+  return node;
 }
 
 Node *equality() {
@@ -99,6 +131,11 @@ Node *primary() {
     return node;
   }
 
-  // or it must be number
+  // = num | ident | "(" expr ")"
+  char ident = consume_ident();
+  if (ident != '\0') {
+    return new_node_ident(ident);
+  }
+
   return new_node_num(expect_number());
 }
