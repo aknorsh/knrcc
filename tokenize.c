@@ -92,6 +92,12 @@ void tokenize() {
       continue;
     }
 
+    if (strncmp(p, "for", 3) == 0 && !is_alnum(p[3])) {
+      cur = new_token(TK_FOR, cur, p, 3);
+      p += 3;
+      continue;
+    }
+
     // lvar
 
     if (('a' <= *p && *p <= 'z') || *p == '_') {
@@ -164,4 +170,8 @@ int expect_number() {
 
 bool at_eof() {
   return token->kind == TK_EOF;
+}
+
+bool at_semicolon() {
+  return token->kind == TK_RESERVED && token->len == 1 && token->str[0] == ';';
 }

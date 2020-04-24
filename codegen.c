@@ -34,8 +34,8 @@ void gen(Node *node) {
       printf("  ret\n");
       return;
     case ND_IF:
-      gen(node->cond);
       key = yield_key();
+      gen(node->cond);
       printf("  pop rax\n");
       printf("  cmp rax, 0\n");
       printf("  je .Lend%s\n", key);
@@ -43,8 +43,8 @@ void gen(Node *node) {
       printf(".Lend%s:\n", key);
       return;
     case ND_IFELSE:
-      gen(node->cond);
       key = yield_key();
+      gen(node->cond);
       printf("  pop rax\n");
       printf("  cmp rax, 0\n");
       printf("  je .Lelse%s\n", key);
@@ -62,6 +62,22 @@ void gen(Node *node) {
       printf("  cmp rax, 0\n");
       printf("  je .Lend%s\n", key);
       gen(node->body);
+      printf("  jmp .Lbegin%s\n", key);
+      printf(".Lend%s:\n", key);
+      return;
+    case ND_FOR:
+      key = yield_key();
+      if (node->for_init)
+        gen(node->for_init);
+      printf(".Lbegin%s:\n", key);
+      if (node->cond)
+        gen(node->cond);
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .Lend%s\n", key);
+      gen(node->body);
+      if (node->for_updt)
+        gen(node->for_updt);
       printf("  jmp .Lbegin%s\n", key);
       printf(".Lend%s:\n", key);
       return;

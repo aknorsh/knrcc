@@ -33,6 +33,7 @@ Node *stmt();       // = expr ";"
                     // | "return" expr ";"
                     // | "if" "(" expr ")" stmt ("else" stmt)?
                     // | "while" "(" expr ")" stmt
+                    // | "for" "(" expr? ";" expr? ";" expr? ")" stmt
 Node *expr();       // = assign
 Node *assign();     // = equality ("=" assign)?
 Node *equality();   // = relational ("==" relational | "!=" relational)*
@@ -76,6 +77,24 @@ Node *stmt() {
     node->kind = ND_WHILE;
     expect("(");
     node->cond = expr();
+    expect(")");
+    node->body = stmt();
+  }
+  else if (consume_keyword(TK_FOR)) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_FOR;
+    expect("(");
+    if (!at_semicolon()) {
+      node->for_init = expr();
+    }
+    expect(";");
+    if (!at_semicolon()) {
+      node->cond = expr();
+    }
+    expect(";");
+    if (!at_semicolon()) {
+      node->for_updt = expr();
+    }
     expect(")");
     node->body = stmt();
   }

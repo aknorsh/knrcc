@@ -16,6 +16,7 @@ typedef enum {
   TK_IF,       // if
   TK_ELSE,     // else
   TK_WHILE,    // while
+  TK_FOR,      // for
 } TokenKind;
 
 typedef struct Token Token;
@@ -36,6 +37,7 @@ bool consume_keyword(TokenKind tk);
 void expect(char *op);
 int expect_number();
 bool at_eof();
+bool at_semicolon();
 
 // parse.c
 
@@ -55,6 +57,7 @@ typedef enum {
   ND_IF,     // if
   ND_IFELSE, // if_else
   ND_WHILE,  // while
+  ND_FOR,    // for
 } NodeKind;
 
 typedef struct Node Node;
@@ -65,9 +68,11 @@ struct Node {
   Node *rhs;     // Right hand side
   int val;       // used when kind is ND_NUM
   int offset;    // used when kind is ND_LVAR
-  Node *cond;    // condition for ND_IF/ND_IFELSE/ND_WHILE
-  Node *body;    // body for ND_IF/ND_IFELSE/ND_WHILE
-  Node *elbody;  // else body for ND_IFELSE
+  Node *cond;    // condition (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
+  Node *body;    // body (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
+  Node *elbody;  // else body (ND_IFELSE)
+  Node *for_init;// init expr (ND_FOR)
+  Node *for_updt;// update expr (ND_FOR)
 };
 
 void program();
