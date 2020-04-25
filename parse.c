@@ -42,7 +42,7 @@ Node *equality();   // = relational ("==" relational | "!=" relational)*
 Node *relational(); // = add ("<" add | "<=" add | ">" add | ">=" add)*
 Node *add();        // = mul ("+" mul | "-" mul)*
 Node *mul();        // = unary ("*" unary | "/" unary)*
-Node *unary();      // = ("+" | "-")? primary
+Node *unary();      // = ("+" | "-")? primary | ("*" | "&") unary
 Node *primary();    // = num
                     // | ident ("(" (expr ("," expr)* )* ")")?
                     // | "(" expr ")"
@@ -214,6 +214,10 @@ Node *mul() {
 }
 
 Node *unary() {
+  if (consume("*")) 
+    return new_node(ND_DEREF, unary(), NULL);
+  if (consume("&"))
+    return new_node(ND_ADDR, unary(), NULL);
   if (consume("+"))
     return primary();
   if (consume("-"))

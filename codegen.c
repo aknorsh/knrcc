@@ -44,6 +44,15 @@ const char *reg[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 void gen(Node *node) {
   char *key;
   switch (node->kind) {
+    case ND_ADDR:
+      gen_lval(node->lhs);
+      return;
+    case ND_DEREF:
+      gen(node->lhs);
+      pop("rax");
+      printf("  mov rax, [rax]\n");
+      push("rax");
+      return;
     case ND_DEFN:
       printf("%s:\n", node->fname);
       // prologue: alloc memory for many variables.

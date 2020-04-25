@@ -75,6 +75,8 @@ typedef enum {
   ND_BLOCK,  // { }
   ND_FNCALL, // function call
   ND_DEFN,   // function definition
+  ND_ADDR,   // address (unary &)
+  ND_DEREF,  // dereference (unary *)
 } NodeKind;
 
 struct Node {

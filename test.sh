@@ -65,4 +65,6 @@ assert 6 "main(){witharg(2,4);}" # witharg(x,y) returns x+y
 assert 7 "add(x,y){return x+y;}main(){add(4,3);}"
 assert 55 "f(x){if(x<3)return 1;return f(x-1)+f(x-2);}main(){f(10);}"
 
+assert 8 "main(){x=8;y=&x;return *y;}"
+assert 8 "main(){x=8;y=5;z=&y+8;return *z;}"
 echo OK
