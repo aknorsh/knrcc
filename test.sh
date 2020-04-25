@@ -54,11 +54,12 @@ assert 4 "a = 1; while (a != 4) a = a + 1; a;        "
 assert 4 "b = 0; for (a = 0; a < 4; a = a+1)b=b+1; b;"
 
 assert 5 "bob=0;{bob=bob+1;bob=bob+2;bob=bob+3;}bob-1;"
+assert 5 "{0;1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;}5;"
 assert 5 "t=10;if(t>11){return 10;}else{t=5;return t;}"
 assert 5 "a_c2=120;b=0;while(b!=5){b=b+1;a_c2=b;}a_c2;"
 assert 5 "bo=0;for(a=-12;a<12;a=a+1){bo=bo+1;bo=5;}bo;"
 
-assert 6 "noarg();return 6;"
-
+assert 6 "noarg();" # noarg() returns 6
+assert 6 "witharg(2,4);" # witharg(x,y) returns x+y
 
 echo OK

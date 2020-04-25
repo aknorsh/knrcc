@@ -15,7 +15,7 @@ char *yield_key() {
 
 static int _hex_align = 0;
 
-void pop (char *reg) {
+void pop (const char *reg) {
   printf("  pop %s\n", reg);
   _hex_align = !_hex_align;
 }
@@ -43,14 +43,22 @@ void gen(Node *node) {
   char *key;
   switch (node->kind) {
     case ND_FNCALL:
+      if (node->args) {
+        const char *reg[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
+        for(int i=0;i<node->args->size;i++) {
+          gen(node->args->node_arr[i]);
+          pop(reg[i]);
+        }
+      }
       if (_hex_align) {
         printf("  call %s\n", node->fname);
       } else {
+        fprintf(stderr, "Alert: aligning occured!\n");
         push("1");
         printf("  call %s\n", node->fname);
-        pop("rax");
+        pop("rdi");
       }
-      pop("rax");
+      push("rax");
       return;
     case ND_BLOCK:
       for (int i=0; i<node->vn->size; i++) {

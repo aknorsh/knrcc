@@ -43,7 +43,7 @@ Node *add();        // = mul ("+" mul | "-" mul)*
 Node *mul();        // = unary ("*" unary | "/" unary)*
 Node *unary();      // = ("+" | "-")? primary
 Node *primary();    // = num
-                    // | ident ("(" ")")?
+                    // | ident ("(" (expr ("," expr)* )* ")")?
                     // | "(" expr ")"
 
 void program() {
@@ -104,7 +104,7 @@ Node *stmt() {
   else if (consume("{")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_BLOCK;
-    node->vn = init_vn(node->vn);
+    node->vn = init_vn();
     while (!consume("}")) {
       pushback_vn(node->vn, stmt());
     }
@@ -201,13 +201,23 @@ Node *primary() {
     return node;
   }
 
+                    // | ident ("(" (expr ("," expr)* )* ")")?
   char *ident = consume_ident();
   if (ident != NULL) {
     if (consume("(")) {
-      expect(")");
       Node *node = calloc(1, sizeof(Node));
       node->kind = ND_FNCALL;
       node->fname = ident;
+      if (consume(")")) {
+        return node;
+      }
+
+      node->args = init_vn();
+      for(;;) {
+        pushback_vn(node->args, expr());
+        if(!consume(",")) break;
+      }
+      expect(")");
       return node;
     }
     return new_node_ident(ident);

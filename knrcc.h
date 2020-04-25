@@ -89,6 +89,7 @@ struct Node {
   Node *for_updt;// update expr (ND_FOR)
   VecNode *vn;   // node vector (ND_BLOCK)
   char *fname;   // function name (ND_FNCALL)
+  VecNode *args; // arguments (ND_FNCALL)
 };
 
 void program();
