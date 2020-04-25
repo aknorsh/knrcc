@@ -31,7 +31,7 @@ Token *new_token_ident(Token *cur, char *str)
 
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = TK_IDENT;
-  tok->str = ident;
+  tok->str = str;
   tok->len = len;
   cur->next = tok;
   return tok;
@@ -99,6 +99,14 @@ void tokenize() {
       continue;
     }
 
+    // type
+
+    if (strncmp(p, "int", 3) == 0 && !is_alnum(p[3])) {
+      cur = new_token(TK_RESERVED, cur, p, 3);
+      p += 3;
+      continue;
+    }
+
     // lvar
 
     if (('a' <= *p && *p <= 'z') || *p == '_') {
@@ -144,7 +152,9 @@ char *consume_ident() { // I want it to return bool....
   if (token->kind != TK_IDENT) {
     return NULL;
   }
-  char *ident = token->str;
+  char *ident = calloc(token->len, sizeof(char));
+  strncpy(ident, token->str, sizeof(char) * token->len);
+  token->str;
   token = token->next;
   return ident;
 }

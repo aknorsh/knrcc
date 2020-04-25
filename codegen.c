@@ -44,6 +44,8 @@ const char *reg[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 void gen(Node *node) {
   char *key;
   switch (node->kind) {
+    case ND_DEFINT:
+      return;
     case ND_ADDR:
       gen_lval(node->lhs);
       return;
@@ -62,8 +64,8 @@ void gen(Node *node) {
       // load parameters
       if (node->args) {
         for(int i=0;i<node->args->size;i++) {
-          gen_lval(node->args->node_arr[i]);
-          pop("rax");
+          printf("  mov rax, rbp\n");
+          printf("  sub rax, %d\n", node->args->node_arr[i]->offset);
           printf("  mov [rax], %s\n", reg[i]);
         }
       }
