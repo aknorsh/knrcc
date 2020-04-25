@@ -15,20 +15,21 @@ Node *new_node_num(int val) {
   return node;
 }
 
-Node *new_node_ident(char *ident) {
+Node *new_node_lvar(char *name) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_LVAR;
 
   // search locals for the same name.
-  LVar *lvar = find_lvar(ident);
+  LVar *lvar = find_lvar(name);
   if (!lvar) {
-    lvar = add_lvar(ident);
+    lvar = add_lvar(name);
   }
   node->offset = lvar->offset;
   return node;
 }
 
-void program();     // = stmt*
+void program();     // = func*
+Node *func();       // = fname "(" ( ident ("," ident)* )? ")" "{" stmt* "}"
 Node *stmt();       // = expr ";"
                     // | "{" stmt* "}"
                     // | "return" expr ";"
@@ -49,9 +50,36 @@ Node *primary();    // = num
 void program() {
   int i = 0;
   while (!at_eof()) {
-    code[i++] = stmt();
+    code[i++] = func();
   }
   code[i] = NULL;
+}
+
+Node *func() {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_DEFN;
+  node->fname = consume_ident();
+  if (node->fname == NULL) {
+    error("Error: Program has to be begin with DEFN.");
+  }
+
+  expect("(");
+  node->args = init_vn();
+  for(;;) {
+    char *ident = consume_ident();
+    if (ident != NULL) {
+      pushback_vn(node->args, new_node_lvar(ident));
+    }
+    if(!consume(",")) break;
+  }
+  expect(")");
+
+  expect("{");
+  node->vn = init_vn();
+  while(!consume("}")) {
+    pushback_vn(node->vn, stmt());
+  }
+  return node;
 }
 
 Node *stmt() {
@@ -194,14 +222,12 @@ Node *unary() {
 }
 
 Node *primary() {
-  // if ( follows, it must be '( expr )'
   if (consume("(")) {
     Node *node = expr();
     expect(")");
     return node;
   }
 
-                    // | ident ("(" (expr ("," expr)* )* ")")?
   char *ident = consume_ident();
   if (ident != NULL) {
     if (consume("(")) {
@@ -220,7 +246,7 @@ Node *primary() {
       expect(")");
       return node;
     }
-    return new_node_ident(ident);
+    return new_node_lvar(ident);
   }
 
   return new_node_num(expect_number());

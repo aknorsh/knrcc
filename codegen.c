@@ -39,18 +39,37 @@ void gen_lval(Node *node) {
   push("rax");
 }
 
+const char *reg[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
+
 void gen(Node *node) {
   char *key;
   switch (node->kind) {
+    case ND_DEFN:
+      printf("%s:\n", node->fname);
+      // prologue: alloc memory for many variables.
+      push("rbp");
+      printf("  mov rbp, rsp\n");
+      printf("  sub rsp, 2048\n");
+      // load parameters
+      if (node->args) {
+        for(int i=0;i<node->args->size;i++) {
+          gen_lval(node->args->node_arr[i]);
+          pop("rax");
+          printf("  mov [rax], %s\n", reg[i]);
+        }
+      }
+      for (int i=0; i<node->vn->size; i++) {
+        gen(node->vn->node_arr[i]);
+      }
+      return;
     case ND_FNCALL:
       if (node->args) {
-        const char *reg[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
         for(int i=0;i<node->args->size;i++) {
           gen(node->args->node_arr[i]);
           pop(reg[i]);
         }
       }
-      if (_hex_align) {
+      if (!_hex_align) {
         printf("  call %s\n", node->fname);
       } else {
         fprintf(stderr, "Alert: aligning occured!\n");
@@ -188,12 +207,6 @@ void gen(Node *node) {
 void codegen() {
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
-  printf("main:\n");
-
-  // prologue: alloc memory for 26 variables.
-  push("rbp");
-  printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 2048\n");
 
   for (int i=0; code[i] != NULL; i++) {
     gen(code[i]);

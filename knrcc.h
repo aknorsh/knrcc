@@ -74,22 +74,23 @@ typedef enum {
   ND_FOR,    // for
   ND_BLOCK,  // { }
   ND_FNCALL, // function call
+  ND_DEFN,   // function definition
 } NodeKind;
 
 struct Node {
   NodeKind kind; // Type of Node
   Node *lhs;     // Left hand side
   Node *rhs;     // Right hand side
-  int val;       // value (ND_NUM)
-  int offset;    // stack offset (ND_LVAR)
-  Node *cond;    // condition (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
-  Node *body;    // body (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
-  Node *elbody;  // else body (ND_IFELSE)
-  Node *for_init;// init expr (ND_FOR)
-  Node *for_updt;// update expr (ND_FOR)
-  VecNode *vn;   // node vector (ND_BLOCK)
-  char *fname;   // function name (ND_FNCALL)
-  VecNode *args; // arguments (ND_FNCALL)
+  int val;       // value         (ND_NUM)
+  int offset;    // stack offset  (ND_LVAR)
+  Node *cond;    // condition     (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
+  Node *body;    // body          (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
+  Node *elbody;  // else body     (ND_IFELSE)
+  Node *for_init;// init expr     (ND_FOR)
+  Node *for_updt;// update expr   (ND_FOR)
+  VecNode *vn;   // node vector   (ND_BLOCK|ND_DEFN)
+  char *fname;   // function name (ND_FNCALL|ND_DEFN)
+  VecNode *args; // arguments     (ND_FNCALL|ND_DEFN)
 };
 
 void program();
