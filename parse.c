@@ -211,12 +211,31 @@ Node *relational() {
 
 Node *add() {
   Node *node = mul();
+  int sz;
 
   for (;;) {
-    if (consume("+"))
-      node = new_node(ND_ADD, node, mul());
-    else if (consume("-"))
-      node = new_node(ND_SUB, node, mul());
+    if (consume("+")) {
+      if (node->kind == ND_LVAR && node->lvar->ty->ty == PTR) {
+        if (node->lvar->ty->ptr_to->ty == INT)
+          sz = 4;
+        else
+          sz = 8;
+        node = new_node(ND_ADD, node, new_node(ND_MUL, new_node_num(sz), mul()));
+      }
+      else
+        node = new_node(ND_ADD, node, mul());
+    }
+    else if (consume("-")) {
+      if (node->kind == ND_LVAR && node->lvar->ty->ty == PTR) {
+        if (node->lvar->ty->ptr_to->ty == INT)
+          sz = 4;
+        else
+          sz = 8;
+        node = new_node(ND_SUB, node, new_node(ND_MUL, new_node_num(sz), mul()));
+      }
+      else
+        node = new_node(ND_SUB, node, mul());
+    }
     else
       return node;
   }

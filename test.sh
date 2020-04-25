@@ -68,5 +68,6 @@ assert 55 "int f(int x){if(x<3)return 1;return f(x-1)+f(x-2);}int main(){f(10);}
 assert 8 "int main(){int x;int y;x=8;y=&x;return *y;            }"
 assert 8 "int main(){int x;int y;int z;x=8;y=5;z=&y+8;return *z;}"
 assert 8 "int main(){int x;int *y;y=&x;*y=8;return x;}"
+assert 8 "int main(){int *p;alloc4(&p,1,2,4,8);int *q;q=p+3;return *q;}"
 
 echo OK
