@@ -9,6 +9,7 @@ typedef struct Token Token;
 typedef struct Node Node;
 typedef struct VecNode VecNode;
 typedef struct LVar LVar;
+typedef struct Type Type;
 
 // container.c
 
@@ -75,7 +76,7 @@ typedef enum {
   ND_BLOCK,  // { }
   ND_FNCALL, // function call
   ND_DEFN,   // function definition
-  ND_DEFINT, // def int var
+  ND_DEFV,   // def variable
   ND_ADDR,   // address (unary &)
   ND_DEREF,  // dereference (unary *)
 } NodeKind;
@@ -85,7 +86,7 @@ struct Node {
   Node *lhs;     // Left hand side
   Node *rhs;     // Right hand side
   int val;       // value         (ND_NUM)
-  int offset;    // stack offset  (ND_LVAR|ND_DEFINT)
+  LVar *lvar;    // local var     (ND_LVAR|ND_DEFINT)
   Node *cond;    // condition     (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
   Node *body;    // body          (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
   Node *elbody;  // else body     (ND_IFELSE)
@@ -109,10 +110,17 @@ struct LVar {
   char *name; // name of lvar
   int len;    // length of name
   int offset; // offset from rbp
+  Type *ty;    // var type
 };
 
 LVar *find_lvar(char *name);
 LVar *add_lvar(char *name);
+
+// type
+struct Type {
+  enum { INT, PTR } ty;
+  Type *ptr_to;
+};
 
 // main.c
 

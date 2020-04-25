@@ -29,14 +29,19 @@ void push (char *fmt, ...) {
   _hex_align = !_hex_align;
 }
 
-void gen_lval(Node *node) {
-  if (node->kind != ND_LVAR) {
-    error("Left value must be Variable.");
-  }
+void gen(Node *node);
 
-  printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->offset);
-  push("rax");
+void gen_lval(Node *node) {
+  if (node->kind == ND_DEREF) {
+    // lhs must calculate some address. Let it do.
+    gen(node->lhs);
+  }
+  else if (node->kind == ND_LVAR) {
+    printf("  mov rax, rbp\n");
+    printf("  sub rax, %d\n", node->lvar->offset);
+    push("rax");
+  }
+  else error("Left value must be Variable.");
 }
 
 const char *reg[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
@@ -44,7 +49,7 @@ const char *reg[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 void gen(Node *node) {
   char *key;
   switch (node->kind) {
-    case ND_DEFINT:
+    case ND_DEFV:
       return;
     case ND_ADDR:
       gen_lval(node->lhs);
@@ -65,7 +70,7 @@ void gen(Node *node) {
       if (node->args) {
         for(int i=0;i<node->args->size;i++) {
           printf("  mov rax, rbp\n");
-          printf("  sub rax, %d\n", node->args->node_arr[i]->offset);
+          printf("  sub rax, %d\n", node->args->node_arr[i]->lvar->offset);
           printf("  mov [rax], %s\n", reg[i]);
         }
       }

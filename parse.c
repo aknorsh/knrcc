@@ -15,52 +15,46 @@ Node *new_node_num(int val) {
   return node;
 }
 
-// split it into add and search
-
-Node *new_node_defvar(char *name) {
+Node *new_node_defvar(char *name, Type* ty) {
   Node *node = calloc(1, sizeof(Node));
-  node->kind = ND_DEFINT;
+  node->kind = ND_DEFV;
 
-  LVar *lvar = find_lvar(name);
-  if (lvar) {
-    error("Error: It is already defined: %s", name);
-  }
-  lvar = add_lvar(name);
-  node->offset = lvar->offset;
+  if (find_lvar(name)) error("Error: It is already defined: %s", name);
+
+  node->lvar = add_lvar(name);
+  node->lvar->ty = ty;
   return node;
 }
 
 Node *new_node_lvar(char *name) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_LVAR;
+  node->lvar = find_lvar(name);
 
-  // search locals for the same name.
-  LVar *lvar = find_lvar(name);
-  if (!lvar) {
-    error("Error: Declaration is needed: %s", name);
-  }
-  node->offset = lvar->offset;
+  if (!node->lvar) error("Error: Declaration is needed: %s", name);
   return node;
 }
 
 void program();     // = func*
-Node *func();       // = "int" fname "(" ("int" ident ("," "int" ident)* )? ")" "{" stmt* "}"
+Node *func();       // = type fname "(" (type ident ("," type ident)* )? ")" "{" stmt* "}"
 Node *stmt();       // = expr ";"
                     // | "{" stmt* "}"
                     // | "return" expr ";"
                     // | "if" "(" expr ")" stmt ("else" stmt)?
                     // | "while" "(" expr ")" stmt
                     // | "for" "(" expr? ";" expr? ";" expr? ")" stmt
-Node *expr();       // = assign | "int" ident
+Node *expr();       // = assign | type ident
 Node *assign();     // = equality ("=" assign)?
 Node *equality();   // = relational ("==" relational | "!=" relational)*
 Node *relational(); // = add ("<" add | "<=" add | ">" add | ">=" add)*
 Node *add();        // = mul ("+" mul | "-" mul)*
 Node *mul();        // = unary ("*" unary | "/" unary)*
-Node *unary();      // = ("+" | "-")? primary | ("*" | "&") unary
+Node *unary();      // = ("+" | "-")? primary
+                    // | ("*" | "&") unary
 Node *primary();    // = num
                     // | ident ("(" (expr ("," expr)* )* ")")?
                     // | "(" expr ")"
+Type *type();       // "int" ("*")*
 
 void program() {
   int i = 0;
@@ -73,7 +67,9 @@ void program() {
 Node *func() {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_DEFN;
-  expect("int");
+
+  type(); // just discard info about type that fn returns.
+
   node->fname = consume_ident();
   if (node->fname == NULL) {
     error("Error: Program has to be begin with DEFN.");
@@ -82,10 +78,12 @@ Node *func() {
   expect("(");
   node->args = init_vn();
   for(;;) {
-    if (consume("int")) {
+    if (at_researved("int")) {
+      Type *ty = type();
       char *ident = consume_ident();
-      if (!ident) error("Type is needed.");
-      pushback_vn(node->args, new_node_defvar(ident));
+      if (!ident)
+        error("Type is needed.");
+      pushback_vn(node->args, new_node_defvar(ident, ty));
     } else break;
     if(!consume(",")) break;
   }
@@ -163,10 +161,11 @@ Node *stmt() {
 }
 
 Node *expr() {
-  if (consume("int")) {
+  if (at_researved("int")) {
+    Type *ty = type();
     char *ident = consume_ident();
-    if (!ident) error("Var name is needed after 'int'.");
-    Node *node = new_node_defvar(ident);
+    if (!ident) error("There is no var after 'int'.");
+    Node *node = new_node_defvar(ident, ty);
     return node;
   }
   return assign();
@@ -277,4 +276,20 @@ Node *primary() {
   }
 
   return new_node_num(expect_number());
+}
+
+Type *gen_type();
+
+Type *type() {
+  expect("int");
+  return gen_type();
+}
+
+Type *gen_type() {
+  Type *ty = calloc(1, sizeof(Type));
+  if (consume("*")) {
+    ty->ty = PTR;
+    ty->ptr_to = gen_type();
+  } else ty->ty = INT;
+  return ty;
 }
