@@ -42,7 +42,9 @@ Node *relational(); // = add ("<" add | "<=" add | ">" add | ">=" add)*
 Node *add();        // = mul ("+" mul | "-" mul)*
 Node *mul();        // = unary ("*" unary | "/" unary)*
 Node *unary();      // = ("+" | "-")? primary
-Node *primary();    // = num | ident | "(" expr ")"
+Node *primary();    // = num
+                    // | ident ("(" ")")?
+                    // | "(" expr ")"
 
 void program() {
   int i = 0;
@@ -85,15 +87,15 @@ Node *stmt() {
     node = calloc(1, sizeof(Node));
     node->kind = ND_FOR;
     expect("(");
-    if (!at_semicolon()) {
+    if (!at_researved(";")) {
       node->for_init = expr();
     }
     expect(";");
-    if (!at_semicolon()) {
+    if (!at_researved(";")) {
       node->cond = expr();
     }
     expect(";");
-    if (!at_semicolon()) {
+    if (!at_researved(";")) {
       node->for_updt = expr();
     }
     expect(")");
@@ -199,9 +201,15 @@ Node *primary() {
     return node;
   }
 
-  // = num | ident | "(" expr ")"
   char *ident = consume_ident();
   if (ident != NULL) {
+    if (consume("(")) {
+      expect(")");
+      Node *node = calloc(1, sizeof(Node));
+      node->kind = ND_FNCALL;
+      node->fname = ident;
+      return node;
+    }
     return new_node_ident(ident);
   }
 

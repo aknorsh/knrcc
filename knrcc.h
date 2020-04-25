@@ -51,7 +51,7 @@ bool consume_keyword(TokenKind tk);
 void expect(char *op);
 int expect_number();
 bool at_eof();
-bool at_semicolon();
+bool at_researved(char *str);
 
 // parse.c
 
@@ -73,20 +73,22 @@ typedef enum {
   ND_WHILE,  // while
   ND_FOR,    // for
   ND_BLOCK,  // { }
+  ND_FNCALL, // function call
 } NodeKind;
 
 struct Node {
   NodeKind kind; // Type of Node
   Node *lhs;     // Left hand side
   Node *rhs;     // Right hand side
-  int val;       // used when kind is ND_NUM
-  int offset;    // used when kind is ND_LVAR
+  int val;       // value (ND_NUM)
+  int offset;    // stack offset (ND_LVAR)
   Node *cond;    // condition (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
   Node *body;    // body (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
   Node *elbody;  // else body (ND_IFELSE)
   Node *for_init;// init expr (ND_FOR)
   Node *for_updt;// update expr (ND_FOR)
   VecNode *vn;   // node vector (ND_BLOCK)
+  char *fname;   // function name (ND_FNCALL)
 };
 
 void program();

@@ -4,7 +4,7 @@ assert() {
   input="$2"
 
   ./knrcc "$input" > tmp.s
-  cc -o tmp tmp.s
+  cc -o tmp tmp.s outerfn.o
   ./tmp
   actual="$?"
 
@@ -15,6 +15,8 @@ assert() {
     exit 1
   fi
 }
+
+cc -c outerfn.c
 
 assert 0 "0;"
 assert 42 "42;"
@@ -55,5 +57,8 @@ assert 5 "bob=0;{bob=bob+1;bob=bob+2;bob=bob+3;}bob-1;"
 assert 5 "t=10;if(t>11){return 10;}else{t=5;return t;}"
 assert 5 "a_c2=120;b=0;while(b!=5){b=b+1;a_c2=b;}a_c2;"
 assert 5 "bo=0;for(a=-12;a<12;a=a+1){bo=bo+1;bo=5;}bo;"
+
+assert 6 "noarg();return 6;"
+
 
 echo OK

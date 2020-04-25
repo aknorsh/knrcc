@@ -13,6 +13,22 @@ char *yield_key() {
   return key;
 }
 
+static int _hex_align = 0;
+
+void pop (char *reg) {
+  printf("  pop %s\n", reg);
+  _hex_align = !_hex_align;
+}
+
+void push (char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  printf("  push ");
+  vprintf(fmt, ap);
+  printf("\n");
+  _hex_align = !_hex_align;
+}
+
 void gen_lval(Node *node) {
   if (node->kind != ND_LVAR) {
     error("Left value must be Variable.");
@@ -20,29 +36,39 @@ void gen_lval(Node *node) {
 
   printf("  mov rax, rbp\n");
   printf("  sub rax, %d\n", node->offset);
-  printf("  push rax\n");
+  push("rax");
 }
 
 void gen(Node *node) {
   char *key;
   switch (node->kind) {
+    case ND_FNCALL:
+      if (_hex_align) {
+        printf("  call %s\n", node->fname);
+      } else {
+        push("1");
+        printf("  call %s\n", node->fname);
+        pop("rax");
+      }
+      pop("rax");
+      return;
     case ND_BLOCK:
       for (int i=0; i<node->vn->size; i++) {
         gen(node->vn->node_arr[i]);
-        printf("  pop rax\n");
+        pop("rax");
       }
       return;
     case ND_RETURN:
       gen(node->lhs);
-      printf("  pop rax\n");
+      pop("rax");
       printf("  mov rsp, rbp\n");
-      printf("  pop rbp\n");
+      pop("rbp");
       printf("  ret\n");
       return;
     case ND_IF:
       key = yield_key();
       gen(node->cond);
-      printf("  pop rax\n");
+      pop("rax");
       printf("  cmp rax, 0\n");
       printf("  je .Lend%s\n", key);
       gen(node->body);
@@ -51,7 +77,7 @@ void gen(Node *node) {
     case ND_IFELSE:
       key = yield_key();
       gen(node->cond);
-      printf("  pop rax\n");
+      pop("rax");
       printf("  cmp rax, 0\n");
       printf("  je .Lelse%s\n", key);
       gen(node->body);
@@ -64,7 +90,7 @@ void gen(Node *node) {
       key = yield_key();
       printf(".Lbegin%s:\n", key);
       gen(node->cond);
-      printf("  pop rax\n");
+      pop("rax");
       printf("  cmp rax, 0\n");
       printf("  je .Lend%s\n", key);
       gen(node->body);
@@ -78,7 +104,7 @@ void gen(Node *node) {
       printf(".Lbegin%s:\n", key);
       if (node->cond)
         gen(node->cond);
-      printf("  pop rax\n");
+      pop("rax");
       printf("  cmp rax, 0\n");
       printf("  je .Lend%s\n", key);
       gen(node->body);
@@ -88,29 +114,29 @@ void gen(Node *node) {
       printf(".Lend%s:\n", key);
       return;
     case ND_NUM:
-      printf("  push %d\n", node->val);
+      push("%d", node->val);
       return;
     case ND_LVAR:
       gen_lval(node);
-      printf("  pop rax\n");
+      pop("rax");
       printf("  mov rax, [rax]\n");
-      printf("  push rax\n");
+      push("rax");
       return;
     case ND_ASSIGN:
       gen_lval(node->lhs);
       gen(node->rhs);
-      printf("  pop rdi\n");
-      printf("  pop rax\n");
+      pop("rdi");
+      pop("rax");
       printf("  mov [rax], rdi\n");
-      printf("  push rdi\n");
+      push("rdi");
       return;
   }
 
   gen(node->lhs);
   gen(node->rhs);
 
-  printf("  pop rdi\n");
-  printf("  pop rax\n");
+  pop("rdi");
+  pop("rax");
 
   switch (node->kind) {
     case ND_ADD:
@@ -148,7 +174,7 @@ void gen(Node *node) {
       break;
   }
 
-  printf("  push rax\n");
+  push("rax");
 }
 
 void codegen() {
@@ -157,16 +183,16 @@ void codegen() {
   printf("main:\n");
 
   // prologue: alloc memory for 26 variables.
-  printf("  push rbp\n");
+  push("rbp");
   printf("  mov rbp, rsp\n");
   printf("  sub rsp, 2048\n");
 
   for (int i=0; code[i] != NULL; i++) {
     gen(code[i]);
-    printf("  pop rax\n");
+    pop("rax");
   }
 
   printf("  mov rsp, rbp\n");
-  printf("  pop rbp\n");
+  pop("rbp");
   printf("  ret\n");
 }

@@ -172,6 +172,6 @@ bool at_eof() {
   return token->kind == TK_EOF;
 }
 
-bool at_semicolon() {
-  return token->kind == TK_RESERVED && token->len == 1 && token->str[0] == ';';
+bool at_researved(char *str) {
+  return token->kind == TK_RESERVED && token->len == strlen(str) && strncmp(str, token->str, strlen(str)) == 0;
 }
