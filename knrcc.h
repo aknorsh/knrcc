@@ -5,6 +5,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct Token Token;
+typedef struct Node Node;
+typedef struct VecNode VecNode;
+typedef struct LVar LVar;
+
+// container.c
+
+struct VecNode {
+  Node **node_arr;
+  int size;
+  int max_size;
+};
+
+VecNode *init_vn();
+void pushback_vn(VecNode* vec, Node *input_node);
+
 // tokenize.c
 
 typedef enum {
@@ -18,8 +34,6 @@ typedef enum {
   TK_WHILE,    // while
   TK_FOR,      // for
 } TokenKind;
-
-typedef struct Token Token;
 
 struct Token {
   TokenKind kind; // kind of token
@@ -58,9 +72,8 @@ typedef enum {
   ND_IFELSE, // if_else
   ND_WHILE,  // while
   ND_FOR,    // for
+  ND_BLOCK,  // { }
 } NodeKind;
-
-typedef struct Node Node;
 
 struct Node {
   NodeKind kind; // Type of Node
@@ -73,6 +86,7 @@ struct Node {
   Node *elbody;  // else body (ND_IFELSE)
   Node *for_init;// init expr (ND_FOR)
   Node *for_updt;// update expr (ND_FOR)
+  VecNode *vn;   // node vector (ND_BLOCK)
 };
 
 void program();
@@ -82,8 +96,6 @@ void program();
 void codegen();
 
 // leftvalue.c
-
-typedef struct LVar LVar;
 
 struct LVar {
   LVar *next; // next lvar or NULL

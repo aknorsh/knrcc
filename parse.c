@@ -30,6 +30,7 @@ Node *new_node_ident(char *ident) {
 
 void program();     // = stmt*
 Node *stmt();       // = expr ";"
+                    // | "{" stmt* "}"
                     // | "return" expr ";"
                     // | "if" "(" expr ")" stmt ("else" stmt)?
                     // | "while" "(" expr ")" stmt
@@ -97,6 +98,14 @@ Node *stmt() {
     }
     expect(")");
     node->body = stmt();
+  }
+  else if (consume("{")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_BLOCK;
+    node->vn = init_vn(node->vn);
+    while (!consume("}")) {
+      pushback_vn(node->vn, stmt());
+    }
   }
   else {
     node = expr();

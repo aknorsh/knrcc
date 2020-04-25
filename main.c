@@ -30,7 +30,7 @@ char *user_input;
 Token *token;
 
 // AST list
-Node *code[100];
+Node *code[256];
 
 // Local Variable list
 LVar *locals;
@@ -45,8 +45,6 @@ int main(int argc, char **argv) {
   tokenize();
   program();
   codegen();
-
-
 
   return 0;
 }
