@@ -54,7 +54,7 @@ Node *unary();      // = "sizeof" unary
                     // | ("+" | "-")? primary
                     // | ("*" | "&") unary
 Node *primary();    // = num
-                    // | ident ( ("(" (expr ("," expr)* )* ")")? | "[" num "]" )
+                    // | ident ( ("(" (expr ("," expr)* )* ")")? | "[" expr "]" )
                     // | "(" expr ")"
 Type *type();       // "int" ("*")*
 
@@ -326,6 +326,21 @@ Node *primary() {
       }
       expect(")");
       return node;
+    }
+    if (consume("[")) {
+      Node *l = new_node_lvar(ident);
+      int offset;
+      switch (l->lvar->ty->ptr_to->ty) {
+        case INT:
+          offset = 4;
+          break;
+        case PTR:
+          offset = 8;
+          break;
+      }
+      Node *num = new_node(ND_MUL, new_node_num(offset), expr());
+      expect("]");
+      return new_node(ND_DEREF, new_node(ND_ADD, l, num), NULL);
     }
     return new_node_lvar(ident);
   }

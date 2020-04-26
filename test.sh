@@ -76,5 +76,6 @@ assert 8 "int main(){return sizeof(1)+sizeof(sizeof(1));}"
 
 assert 9 "int main(){int a[10];return 9;}"
 assert 9 "int main(){int a[2];*a=5;*(a+1)=4;int *p;p=a;return *p+*(p+1);}"
+assert 9 "int main(){int a[2];a[0]=5;a[1]=4;int *p;p=a;return p[0]+p[1];}"
 
 echo OK
