@@ -65,9 +65,13 @@ assert 6 "int main(){witharg(2,4);}" # witharg(x,y) returns x+y
 assert 7 "int add(int x,int y){return x+y;}int main(){add(4,3);}"
 assert 55 "int f(int x){if(x<3)return 1;return f(x-1)+f(x-2);}int main(){f(10);}"
 
-assert 8 "int main(){int x;int y;x=8;y=&x;return *y;            }"
-assert 8 "int main(){int x;int y;int z;x=8;y=5;z=&y+8;return *z;}"
-assert 8 "int main(){int x;int *y;y=&x;*y=8;return x;}"
+assert 8 "int main(){int x;int y;x=8;y=&x;return *y;                  }"
+assert 8 "int main(){int x;int y;int z;x=8;y=5;z=&y+8;return *z;      }"
+assert 8 "int main(){int x;int *y;y=&x;*y=8;return x;                 }"
 assert 8 "int main(){int *p;alloc4(&p,1,2,4,8);int *q;q=p+3;return *q;}"
+
+assert 8 "int main(){int x;return sizeof(x)+sizeof(x+3);}"
+assert 8 "int main(){int *y;return (sizeof(y)+sizeof(y+3)+sizeof(*y)*2)/3;}"
+assert 8 "int main(){return sizeof(1)+sizeof(sizeof(1));}"
 
 echo OK

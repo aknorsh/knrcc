@@ -34,6 +34,7 @@ typedef enum {
   TK_ELSE,     // else
   TK_WHILE,    // while
   TK_FOR,      // for
+  TK_SIZEOF,   // sizeof
 } TokenKind;
 
 struct Token {

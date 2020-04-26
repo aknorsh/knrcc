@@ -49,7 +49,8 @@ Node *equality();   // = relational ("==" relational | "!=" relational)*
 Node *relational(); // = add ("<" add | "<=" add | ">" add | ">=" add)*
 Node *add();        // = mul ("+" mul | "-" mul)*
 Node *mul();        // = unary ("*" unary | "/" unary)*
-Node *unary();      // = ("+" | "-")? primary
+Node *unary();      // = "sizeof" unary
+                    // | ("+" | "-")? primary
                     // | ("*" | "&") unary
 Node *primary();    // = num
                     // | ident ("(" (expr ("," expr)* )* ")")?
@@ -255,6 +256,29 @@ Node *mul() {
 }
 
 Node *unary() {
+  if (consume_keyword(TK_SIZEOF)) {
+    Node *node = unary();
+    int deref_cnt = 0;
+    while (node->kind != ND_LVAR && node->kind != ND_NUM) {
+      if (node->kind == ND_DEREF) {
+        deref_cnt++;
+      }
+      if (node->kind == ND_ADDR) {
+        deref_cnt--;
+      }
+      node = node->lhs;
+    }
+    if (deref_cnt<0) return new_node_num(8);
+    else if (node->kind == ND_LVAR){
+      Type *ty = node->lvar->ty;
+      for (int i=0;i<deref_cnt;i++) {
+        ty = ty->ptr_to;
+      }
+      if (ty->ty == INT) return new_node_num(4);
+      else return new_node_num(8);
+    }
+    else return new_node_num(4);
+  }
   if (consume("*")) 
     return new_node(ND_DEREF, unary(), NULL);
   if (consume("&"))
