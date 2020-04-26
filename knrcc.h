@@ -115,12 +115,13 @@ struct LVar {
 };
 
 LVar *find_lvar(char *name);
-LVar *add_lvar(char *name);
+LVar *add_lvar(char *name, Type* ty);
 
 // type
 struct Type {
-  enum { INT, PTR } ty;
+  enum { INT, PTR, ARRAY } ty;
   Type *ptr_to;
+  size_t array_size;
 };
 
 // main.c

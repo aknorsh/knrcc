@@ -21,7 +21,7 @@ Node *new_node_defvar(char *name, Type* ty) {
 
   if (find_lvar(name)) error("Error: It is already defined: %s", name);
 
-  node->lvar = add_lvar(name);
+  node->lvar = add_lvar(name, ty);
   node->lvar->ty = ty;
   return node;
 }
@@ -43,7 +43,8 @@ Node *stmt();       // = expr ";"
                     // | "if" "(" expr ")" stmt ("else" stmt)?
                     // | "while" "(" expr ")" stmt
                     // | "for" "(" expr? ";" expr? ";" expr? ")" stmt
-Node *expr();       // = assign | type ident
+Node *expr();       // = assign
+                    // | type ident ("[" num "]")?
 Node *assign();     // = equality ("=" assign)?
 Node *equality();   // = relational ("==" relational | "!=" relational)*
 Node *relational(); // = add ("<" add | "<=" add | ">" add | ">=" add)*
@@ -53,7 +54,7 @@ Node *unary();      // = "sizeof" unary
                     // | ("+" | "-")? primary
                     // | ("*" | "&") unary
 Node *primary();    // = num
-                    // | ident ("(" (expr ("," expr)* )* ")")?
+                    // | ident ( ("(" (expr ("," expr)* )* ")")? | "[" num "]" )
                     // | "(" expr ")"
 Type *type();       // "int" ("*")*
 
@@ -166,8 +167,17 @@ Node *expr() {
     Type *ty = type();
     char *ident = consume_ident();
     if (!ident) error("There is no var after 'int'.");
-    Node *node = new_node_defvar(ident, ty);
-    return node;
+
+    if (consume("[")) {
+      Type *ar_ty = calloc(1, sizeof(Type));
+      ar_ty->ty = ARRAY;
+      ar_ty->array_size = expect_number();
+      ar_ty->ptr_to = ty;
+      ty = ar_ty;
+      expect("]");
+    }
+
+    return new_node_defvar(ident, ty);
   }
   return assign();
 }
@@ -216,7 +226,8 @@ Node *add() {
 
   for (;;) {
     if (consume("+")) {
-      if (node->kind == ND_LVAR && node->lvar->ty->ty == PTR) {
+      if (node->kind == ND_LVAR &&
+         (node->lvar->ty->ty == PTR || node->lvar->ty->ty == ARRAY)) {
         if (node->lvar->ty->ptr_to->ty == INT)
           sz = 4;
         else
@@ -227,7 +238,8 @@ Node *add() {
         node = new_node(ND_ADD, node, mul());
     }
     else if (consume("-")) {
-      if (node->kind == ND_LVAR && node->lvar->ty->ty == PTR) {
+      if (node->kind == ND_LVAR &&
+         (node->lvar->ty->ty == PTR || node->lvar->ty->ty == ARRAY)) {
         if (node->lvar->ty->ptr_to->ty == INT)
           sz = 4;
         else

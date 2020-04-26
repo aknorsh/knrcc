@@ -13,16 +13,30 @@ LVar *find_lvar(char *name) {
   return NULL;
 }
 
-LVar *add_lvar(char *name) {
+LVar *add_lvar(char *name, Type *ty) {
   LVar *lvar = calloc(1, sizeof(LVar));
   lvar->next = locals;
   lvar->name = name;
   lvar->len  = strlen(name);
+
+  int offset;
+  switch (ty->ty) {
+    case ARRAY:
+      offset = ty->array_size * 8;
+      break;
+    case INT:
+      offset = 8; // this must be 4, actually
+      break;
+    case PTR:
+      offset = 8;
+      break;
+  }
+
   if (locals) {
-    lvar->offset = locals->offset + 8;
+    lvar->offset = locals->offset + offset;
   }
   else {
-    lvar->offset = 8;
+    lvar->offset = offset;
   }
   locals = lvar;
   return lvar;
