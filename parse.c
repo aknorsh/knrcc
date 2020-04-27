@@ -61,6 +61,7 @@ Type *type();       // "int" ("*")*
 void program() {
   int i = 0;
   while (!at_eof()) {
+    locals = local_variables[i];
     code[i++] = func();
   }
   code[i] = NULL;

@@ -129,6 +129,7 @@ struct Type {
 extern char *user_input;
 extern Token *token;
 extern Node *code[];
+extern LVar *local_variables[256];
 extern LVar *locals;
 
 void error(char *fmt, ...);

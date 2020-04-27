@@ -33,6 +33,7 @@ Token *token;
 Node *code[256];
 
 // Local Variable list
+LVar *local_variables[256];
 LVar *locals;
 
 int main(int argc, char **argv) {

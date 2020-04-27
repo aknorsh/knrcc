@@ -63,6 +63,7 @@ assert 6 "int main(){noarg();}" # noarg() returns 6
 assert 6 "int main(){witharg(2,4);}" # witharg(x,y) returns x+y
 
 assert 7 "int add(int x,int y){return x+y;}int main(){add(4,3);}"
+assert 7 "int add(int x,int y){return x+y;}int main(){int x;int y;x=4;y=3;add(x,y);}"
 assert 55 "int f(int x){if(x<3)return 1;return f(x-1)+f(x-2);}int main(){f(10);}"
 
 assert 8 "int main(){int x;int y;x=8;y=&x;return *y;                  }"

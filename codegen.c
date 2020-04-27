@@ -225,6 +225,7 @@ void codegen() {
   printf(".global main\n");
 
   for (int i=0; code[i] != NULL; i++) {
+    locals = local_variables[i];
     gen(code[i]);
     pop("rax");
   }
