@@ -77,14 +77,14 @@ void tokenize() {
       continue;
     }
 
-    if (tokenize_keyword(&cur, &p, "return", TK_RETURN)   ||
-        tokenize_keyword(&cur, &p, "if",     TK_IF)       ||
-        tokenize_keyword(&cur, &p, "else",   TK_ELSE)     ||
-        tokenize_keyword(&cur, &p, "while",  TK_WHILE)    ||
-        tokenize_keyword(&cur, &p, "for",    TK_FOR)      ||
-        tokenize_keyword(&cur, &p, "sizeof", TK_SIZEOF)   ||
-        tokenize_keyword(&cur, &p, "int",    TK_RESERVED) ||
-        tokenize_keyword(&cur, &p, "char",   TK_RESERVED))
+    if (tokenize_keyword(&cur, &p, "return", TK_RETURN) ||
+        tokenize_keyword(&cur, &p, "if",     TK_IF)     ||
+        tokenize_keyword(&cur, &p, "else",   TK_ELSE)   ||
+        tokenize_keyword(&cur, &p, "while",  TK_WHILE)  ||
+        tokenize_keyword(&cur, &p, "for",    TK_FOR)    ||
+        tokenize_keyword(&cur, &p, "sizeof", TK_SIZEOF) ||
+        tokenize_keyword(&cur, &p, "int",    TK_TYPE)   ||
+        tokenize_keyword(&cur, &p, "char",   TK_TYPE))
       continue;
 
     if (('a' <= *p && *p <= 'z') || *p == '_') {
@@ -153,6 +153,20 @@ int expect_number() {
   return val;
 }
 
+TypeKind expect_type() {
+  if (token->kind != TK_TYPE) {
+    error_at(token->str, "Type is needed.");
+  }
+  char initial = token->str[0];
+  token = token->next;
+  switch (initial) {
+    case 'i': // int
+      return INT;
+    case 'c': // char
+      return CHAR;
+  }
+}
+
 // at: Check current token
 
 bool at_eof() {
@@ -161,4 +175,8 @@ bool at_eof() {
 
 bool at_researved(char *str) {
   return token->kind == TK_RESERVED && token->len == strlen(str) && strncmp(str, token->str, strlen(str)) == 0;
+}
+
+bool at_type() {
+  return token->kind == TK_TYPE;
 }

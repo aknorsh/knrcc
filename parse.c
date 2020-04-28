@@ -98,7 +98,8 @@ void program() {
 Node *defglobal() {
   Node *node = calloc(1, sizeof(Node));
 
-  Type *ty = type(); // just discard info about type that fn returns.
+  Type *ty = type();
+  if (!ty) error("No type.");
 
   char *ident = consume_ident();
   if (!ident) error("Error: Program has to be begin with DEFN.");
@@ -108,7 +109,7 @@ Node *defglobal() {
     node->fname = ident;
     node->args = init_vn();
     for(;;) {
-      if (at_researved("int")) {
+      if (at_type()) {
         Type *ty = type();
         char *ident = consume_ident();
         if (!ident)
@@ -200,7 +201,7 @@ Node *stmt() {
 }
 
 Node *expr() {
-  if (at_researved("int")) {
+  if (at_type()) {
     Type *ty = type();
     char *ident = consume_ident();
     if (!ident) error("There is no var after 'int'.");
@@ -372,18 +373,17 @@ Node *primary() {
   return new_node_num(expect_number());
 }
 
-Type *gen_type();
+Type *gen_type(TypeKind tk);
 
 Type *type() {
-  expect("int");
-  return gen_type();
+  return gen_type(expect_type());
 }
 
-Type *gen_type() {
+Type *gen_type(TypeKind tk) {
   Type *ty = calloc(1, sizeof(Type));
   if (consume("*")) {
     ty->ty = PTR;
-    ty->ptr_to = gen_type();
-  } else ty->ty = INT;
+    ty->ptr_to = gen_type(tk);
+  } else ty->ty = tk;
   return ty;
 }

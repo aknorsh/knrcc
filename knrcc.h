@@ -23,10 +23,28 @@ struct VecNode {
 VecNode *init_vn();
 void pushback_vn(VecNode* vec, Node *input_node);
 
+// type.c
+typedef enum {
+  CHAR,
+  INT,
+  PTR,
+  ARRAY
+} TypeKind;
+
+int memSize(Type *ty);
+Type *arraynize(Type *ty, int size);
+
+struct Type {
+  TypeKind ty;
+  Type *ptr_to;
+  size_t array_size;
+};
+
 // tokenize.c
 
 typedef enum {
   TK_RESERVED, // Symbol
+  TK_TYPE,     // type
   TK_IDENT,    // Identifier
   TK_NUM,      // Number
   TK_EOF,      // End of file
@@ -51,10 +69,12 @@ void tokenize();
 bool consume(char *op);
 char *consume_ident();
 bool consume_kwd(TokenKind tk);
+TypeKind expect_type();
 void expect(char *op);
 int expect_number();
 bool at_eof();
 bool at_researved(char *str);
+bool at_type();
 
 // parse.c
 
@@ -132,23 +152,6 @@ struct GVar {
 
 GVar *find_gvar(char *name);
 GVar *add_gvar(char *name, Type* ty);
-
-// type.c
-typedef enum {
-  CHAR,
-  INT,
-  PTR,
-  ARRAY
-} TypeKind;
-
-int memSize(Type *ty);
-Type *arraynize(Type *ty, int size);
-
-struct Type {
-  TypeKind ty;
-  Type *ptr_to;
-  size_t array_size;
-};
 
 // main.c
 

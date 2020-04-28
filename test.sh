@@ -85,4 +85,6 @@ assert 9 "int g;int dum(){g=1;}int main(){dum();int g;g=9;return g;}"
 assert 9 "int g[1];int main(){g[0]=9;return g[0];}"
 assert 9 "int g[2];int main(){g[0]=3;g[1]=6;return g[0]+g[1];}"
 
+assert 1 "char x;int main(){char y;char x[2];return 1;}"
+
 echo OK
