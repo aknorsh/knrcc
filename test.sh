@@ -78,9 +78,9 @@ assert 8 "int main(){return sizeof(1)+sizeof(sizeof(1));}"
 assert 9 "int main(){int a[10];return 9;}"
 assert 9 "int main(){int a[2];*a=9;return *a;}"
 assert 8 "int main(){int a[2];a[0]=5;a[1]=3;int *p;p=a;return p[0]+p[1];}"
-#assert 9 "int k; int main(){if(k==0)return 9;}"
-#assert 9 "int k;int main(){k=9;}"
-#assert 9 "int k;int main(){k=9;return k;}"
-#assert 9 "int k;int dum(){k=1;}int main(){dum();int k;k=9;return k;}"
+assert 2 "int g; int main(){return 2;}"
+assert 9 "int g; int main(){if(g==0)return 9;}"
+assert 9 "int g;int main(){g=9;return g;}"
+assert 9 "int g;int dum(){g=1;}int main(){dum();int g;g=9;return g;}"
 
 echo OK

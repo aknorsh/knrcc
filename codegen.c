@@ -35,9 +35,7 @@ void gen(Node *node);
 void gen_lval(Node *node) {
   if (node->kind == ND_DEREF) {
     // lhs must calculate some address. Let it do.
-    printf("# Stt:Deref\n");
     gen(node->lhs);
-    printf("# End:Deref\n");
   }
   else if (node->kind == ND_LVAR) {
     printf("  mov rax, rbp\n");
@@ -80,9 +78,6 @@ void gen(Node *node) {
       push("rdi");
       return;
     case ND_DEFV:
-      if(node->lvar) return;
-      printf("%s:\n", node->gvar->name);
-      printf("  .zero %d\n", node->gvar->sz);
       push("rax");
       return;
     case ND_DEFN:
@@ -241,13 +236,21 @@ void codegen() {
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
 
-  for (int i=0; code[i] != NULL; i++) {
-    locals = local_variables[i];
-    gen(code[i]);
-    pop("rax");
+  printf("\n.data\n");
+  for (GVar *var = globals; var; var=var->next) {
+    printf("%s:\n", var->name);
+    printf("  .zero %d\n", var->sz);
   }
 
-  printf("  mov rsp, rbp\n");
-  pop("rbp");
-  printf("  ret\n");
+  printf("\n.text\n");
+  for (int i=0; code[i] != NULL; i++) {
+    if (code[i]->kind != ND_DEFV) {
+      locals = local_variables[i];
+      gen(code[i]);
+      pop("rax");
+      printf("  mov rsp, rbp\n");
+      pop("rbp");
+      printf("  ret\n");
+    }
+  }
 }

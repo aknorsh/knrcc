@@ -51,7 +51,7 @@ Node *new_node_var(char *name) {
   }
   else if (node->gvar) {
     node->kind = ND_GVAR;
-    if (node->lvar->ty->ty == ARRAY) {
+    if (node->gvar->ty->ty == ARRAY) {
       node = new_node(ND_ADDR, node, NULL);
     }
   }
