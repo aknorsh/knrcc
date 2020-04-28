@@ -125,46 +125,49 @@ Node *defglobal() {
     }
   }
   else { // defvar route
-    Node *node = new_node_def_gvar(ident, ty);
+    if (consume("[")) {
+      ty = arraynize(ty, expect_number());
+      expect("]");
+    }
     expect(";");
-    return node;
+    return new_node_def_gvar(ident, ty);
   }
-
   return node;
 }
 
 Node *stmt() {
   Node *node;
 
-  if (consume_keyword(TK_RETURN)) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_RETURN;
-    node->lhs = expr();
+  if (consume_kwd(TK_RETURN)) {
+    node = new_node(ND_RETURN, expr(), NULL);
     expect(";");
+    return node;
   }
-  else if (consume_keyword(TK_IF)) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_IF;
+
+  if (consume_kwd(TK_IF)) {
+    node = new_node(ND_IF, NULL, NULL);
     expect("(");
     node->cond = expr();
     expect(")");
     node->body = stmt();
-    if (consume_keyword(TK_ELSE)) {
+    if (consume_kwd(TK_ELSE)) {
       node->kind = ND_IFELSE;
       node->elbody = stmt();
     }
+    return node;
   }
-  else if (consume_keyword(TK_WHILE)) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_WHILE;
+
+ if (consume_kwd(TK_WHILE)) {
+    node = new_node(ND_WHILE, NULL, NULL);
     expect("(");
     node->cond = expr();
     expect(")");
     node->body = stmt();
+    return node;
   }
-  else if (consume_keyword(TK_FOR)) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_FOR;
+
+  if (consume_kwd(TK_FOR)) {
+    node = new_node(ND_FOR, NULL, NULL);
     expect("(");
     if (!at_researved(";")) {
       node->for_init = expr();
@@ -179,20 +182,20 @@ Node *stmt() {
     }
     expect(")");
     node->body = stmt();
+    return node;
   }
-  else if (consume("{")) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_BLOCK;
+
+  if (consume("{")) {
+    node = new_node(ND_BLOCK, NULL, NULL);
     node->vn = init_vn();
     while (!consume("}")) {
       pushback_vn(node->vn, stmt());
     }
-  }
-  else {
-    node = expr();
-    expect(";");
+    return node;
   }
 
+  node = expr();
+  expect(";");
   return node;
 }
 
@@ -203,11 +206,7 @@ Node *expr() {
     if (!ident) error("There is no var after 'int'.");
 
     if (consume("[")) {
-      Type *ar_ty = calloc(1, sizeof(Type));
-      ar_ty->ty = ARRAY;
-      ar_ty->array_size = expect_number();
-      ar_ty->ptr_to = ty;
-      ty = ar_ty;
+      ty = arraynize(ty, expect_number());
       expect("]");
     }
 
@@ -256,35 +255,31 @@ Node *relational() {
 
 Node *add() {
   Node *node = mul();
-  int sz;
 
   for (;;) {
     if (consume("+")) {
       if (node->kind == ND_LVAR &&
          (node->lvar->ty->ty == PTR || node->lvar->ty->ty == ARRAY)) {
-        if (node->lvar->ty->ptr_to->ty == INT)
-          sz = 4;
-        else
-          sz = 8;
-        node = new_node(ND_ADD, node, new_node(ND_MUL, new_node_num(sz), mul()));
+          int sz = memSize(node->lvar->ty->ptr_to);
+          node = new_node(ND_ADD, node, new_node(ND_MUL, new_node_num(sz), mul()));
       }
       else
         node = new_node(ND_ADD, node, mul());
+      continue;
     }
-    else if (consume("-")) {
+
+    if (consume("-")) {
       if (node->kind == ND_LVAR &&
          (node->lvar->ty->ty == PTR || node->lvar->ty->ty == ARRAY)) {
-        if (node->lvar->ty->ptr_to->ty == INT)
-          sz = 4;
-        else
-          sz = 8;
-        node = new_node(ND_SUB, node, new_node(ND_MUL, new_node_num(sz), mul()));
+          int sz = memSize(node->lvar->ty->ptr_to);
+          node = new_node(ND_SUB, node, new_node(ND_MUL, new_node_num(sz), mul()));
       }
       else
         node = new_node(ND_SUB, node, mul());
+      continue;
     }
-    else
-      return node;
+
+    return node;
   }
 }
 
@@ -302,16 +297,11 @@ Node *mul() {
 }
 
 Node *unary() {
-  if (consume_keyword(TK_SIZEOF)) {
+  if (consume_kwd(TK_SIZEOF)) {
     Node *node = unary();
     int deref_cnt = 0;
     while (node->kind != ND_LVAR && node->kind != ND_NUM) {
-      if (node->kind == ND_DEREF) {
-        deref_cnt++;
-      }
-      if (node->kind == ND_ADDR) {
-        deref_cnt--;
-      }
+      deref_cnt = deref_cnt + (node->kind == ND_DEREF) - (node->kind == ND_ADDR);
       node = node->lhs;
     }
     if (deref_cnt<0) return new_node_num(8);
@@ -320,10 +310,9 @@ Node *unary() {
       for (int i=0;i<deref_cnt;i++) {
         ty = ty->ptr_to;
       }
-      if (ty->ty == INT) return new_node_num(4);
-      else return new_node_num(8);
+      return new_node_num(memSize(ty));
     }
-    else return new_node_num(4);
+    else return new_node_num(4); // now it is always int
   }
   if (consume("*")) 
     return new_node(ND_DEREF, unary(), NULL);
@@ -364,18 +353,15 @@ Node *primary() {
     if (consume("[")) {
       Node *l = new_node_var(ident);
       int offset;
-      Node *tmp = l;
-      if (tmp->kind == ND_ADDR)
-        tmp = tmp->lhs;
-
-      switch (tmp->lvar->ty->ptr_to->ty) {
-        case INT:
-          offset = 4;
-          break;
-        case PTR:
-          offset = 8;
-          break;
+      if (l->kind == ND_ADDR) {
+        if (l->lhs->lvar) offset = memSize(l->lhs->lvar->ty);
+        else offset = memSize(l->lhs->gvar->ty);
       }
+      else {
+        if (l->lvar) offset = memSize(l->lvar->ty);
+        else offset = memSize(l->gvar->ty);
+      }
+
       Node *num = new_node(ND_MUL, new_node_num(offset), expr());
       expect("]");
       return new_node(ND_DEREF, new_node(ND_ADD, l, num), NULL);

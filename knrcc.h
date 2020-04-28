@@ -50,7 +50,7 @@ void tokenize();
 
 bool consume(char *op);
 char *consume_ident();
-bool consume_keyword(TokenKind tk);
+bool consume_kwd(TokenKind tk);
 void expect(char *op);
 int expect_number();
 bool at_eof();
@@ -133,9 +133,19 @@ struct GVar {
 GVar *find_gvar(char *name);
 GVar *add_gvar(char *name, Type* ty);
 
-// type
+// type.c
+typedef enum {
+  CHAR,
+  INT,
+  PTR,
+  ARRAY
+} TypeKind;
+
+int memSize(Type *ty);
+Type *arraynize(Type *ty, int size);
+
 struct Type {
-  enum { INT, PTR, ARRAY } ty;
+  TypeKind ty;
   Type *ptr_to;
   size_t array_size;
 };

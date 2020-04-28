@@ -37,6 +37,16 @@ Token *new_token_ident(Token *cur, char *str)
   return tok;
 }
 
+bool tokenize_keyword (Token **cur, char **p, char *keyword, TokenKind tk) {
+  int len = strlen(keyword);
+  if (strncmp(*p, keyword, len) == 0 && !is_alnum((*p)[len])) {
+    *cur = new_token(tk, *cur, *p, len);
+    *p += len;
+    return true;
+  }
+  return false;
+}
+
 void tokenize() {
   char *p = user_input;
   Token head;
@@ -67,53 +77,15 @@ void tokenize() {
       continue;
     }
 
-    // keywords
-
-    if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
-      cur = new_token(TK_RETURN, cur, p, 6);
-      p += 6;
+    if (tokenize_keyword(&cur, &p, "return", TK_RETURN)   ||
+        tokenize_keyword(&cur, &p, "if",     TK_IF)       ||
+        tokenize_keyword(&cur, &p, "else",   TK_ELSE)     ||
+        tokenize_keyword(&cur, &p, "while",  TK_WHILE)    ||
+        tokenize_keyword(&cur, &p, "for",    TK_FOR)      ||
+        tokenize_keyword(&cur, &p, "sizeof", TK_SIZEOF)   ||
+        tokenize_keyword(&cur, &p, "int",    TK_RESERVED) ||
+        tokenize_keyword(&cur, &p, "char",   TK_RESERVED))
       continue;
-    }
-
-    if (strncmp(p, "if", 2) == 0 && !is_alnum(p[2])) {
-      cur = new_token(TK_IF, cur, p, 2);
-      p += 2;
-      continue;
-    }
-
-    if (strncmp(p, "else", 4) == 0 && !is_alnum(p[4])) {
-      cur = new_token(TK_ELSE, cur, p, 4);
-      p += 4;
-      continue;
-    }
-
-    if (strncmp(p, "while", 5) == 0 && !is_alnum(p[5])) {
-      cur = new_token(TK_WHILE, cur, p, 5);
-      p += 5;
-      continue;
-    }
-
-    if (strncmp(p, "for", 3) == 0 && !is_alnum(p[3])) {
-      cur = new_token(TK_FOR, cur, p, 3);
-      p += 3;
-      continue;
-    }
-
-    if (strncmp(p, "sizeof", 6) == 0 && !is_alnum(p[6])) {
-      cur = new_token(TK_SIZEOF, cur, p, 6);
-      p += 6;
-      continue;
-    }
-
-    // type
-
-    if (strncmp(p, "int", 3) == 0 && !is_alnum(p[3])) {
-      cur = new_token(TK_RESERVED, cur, p, 3);
-      p += 3;
-      continue;
-    }
-
-    // lvar
 
     if (('a' <= *p && *p <= 'z') || *p == '_') {
       cur = new_token_ident(cur, p);
@@ -121,15 +93,13 @@ void tokenize() {
       continue;
     }
 
-    // num
-
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p, 0);
       cur->val = strtol(p, &p, 10);
       continue;
     }
 
-    error("Cannot Tokenize.");
+    error("I don't know the token.");
   }
 
   new_token(TK_EOF, cur, p, 0);
@@ -147,7 +117,7 @@ bool consume(char *op) {
   return true;
 }
 
-bool consume_keyword(TokenKind tk) {
+bool consume_kwd(TokenKind tk) {
   if (token->kind != tk)
     return false;
   token = token->next;
