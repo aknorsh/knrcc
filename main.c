@@ -36,6 +36,9 @@ Node *code[256];
 LVar *local_variables[256];
 LVar *locals;
 
+// Global Variable list
+GVar *globals;
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     error("Invalid args");

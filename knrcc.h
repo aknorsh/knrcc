@@ -9,6 +9,7 @@ typedef struct Token Token;
 typedef struct Node Node;
 typedef struct VecNode VecNode;
 typedef struct LVar LVar;
+typedef struct GVar GVar;
 typedef struct Type Type;
 
 // container.c
@@ -67,7 +68,8 @@ typedef enum {
   ND_EQ,     // ==
   ND_NEQ,    // !=
   ND_ASSIGN, // =
-  ND_LVAR,   // Identifier
+  ND_LVAR,   // Local Variable
+  ND_GVAR,   // Global Variable
   ND_NUM,    // Decimal Number
   ND_RETURN, // return
   ND_IF,     // if
@@ -87,7 +89,9 @@ struct Node {
   Node *lhs;     // Left hand side
   Node *rhs;     // Right hand side
   int val;       // value         (ND_NUM)
-  LVar *lvar;    // local var     (ND_LVAR|ND_DEFINT)
+  char *vname;   // var name      (ND_LVAR)
+  LVar *lvar;    // local var     (ND_LVAR|ND_DEFV)
+  GVar *gvar;    // global var    (ND_DEFV)
   Node *cond;    // condition     (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
   Node *body;    // body          (ND_IF/ND_IFELSE/ND_WHILE/ND_FOR)
   Node *elbody;  // else body     (ND_IFELSE)
@@ -96,6 +100,7 @@ struct Node {
   VecNode *vn;   // node vector   (ND_BLOCK|ND_DEFN)
   char *fname;   // function name (ND_FNCALL|ND_DEFN)
   VecNode *args; // arguments     (ND_FNCALL|ND_DEFN)
+  LVar *scope;   // ptr to local scope
 };
 
 void program();
@@ -104,7 +109,7 @@ void program();
 
 void codegen();
 
-// leftvalue.c
+// variables.c
 
 struct LVar {
   LVar *next; // next lvar or NULL
@@ -116,6 +121,17 @@ struct LVar {
 
 LVar *find_lvar(char *name);
 LVar *add_lvar(char *name, Type* ty);
+
+struct GVar {
+  GVar *next; // next gvar or NULL
+  char *name; // name of gvar
+  int len;    // length of name
+  Type *ty;   // var type
+  int sz;     // var size
+};
+
+GVar *find_gvar(char *name);
+GVar *add_gvar(char *name, Type* ty);
 
 // type
 struct Type {
@@ -131,6 +147,7 @@ extern Token *token;
 extern Node *code[];
 extern LVar *local_variables[256];
 extern LVar *locals;
+extern GVar *globals;
 
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);

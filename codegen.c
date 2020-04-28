@@ -31,17 +31,23 @@ void push (char *fmt, ...) {
 
 void gen(Node *node);
 
+// load address which has val
 void gen_lval(Node *node) {
   if (node->kind == ND_DEREF) {
     // lhs must calculate some address. Let it do.
+    printf("# Stt:Deref\n");
     gen(node->lhs);
+    printf("# End:Deref\n");
   }
   else if (node->kind == ND_LVAR) {
     printf("  mov rax, rbp\n");
     printf("  sub rax, %d\n", node->lvar->offset);
     push("rax");
   }
-  else error("Left value must be Variable.");
+  else if (node->kind == ND_GVAR) {
+    printf("  push offset %s\n", node->gvar->name);
+  }
+  else error("Error: Left value must be Variable.");
 }
 
 const char *reg[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
@@ -49,8 +55,6 @@ const char *reg[] = { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
 void gen(Node *node) {
   char *key;
   switch (node->kind) {
-    case ND_DEFV:
-      return;
     case ND_ADDR:
       gen_lval(node->lhs);
       return;
@@ -58,6 +62,27 @@ void gen(Node *node) {
       gen(node->lhs);
       pop("rax");
       printf("  mov rax, [rax]\n");
+      push("rax");
+      return;
+    case ND_LVAR:
+    case ND_GVAR:
+      gen_lval(node);
+      pop("rax");
+      printf("  mov rax, [rax]\n");
+      push("rax");
+      return;
+    case ND_ASSIGN:
+      gen_lval(node->lhs);
+      gen(node->rhs);
+      pop("rdi");
+      pop("rax");
+      printf("  mov [rax], rdi\n");
+      push("rdi");
+      return;
+    case ND_DEFV:
+      if(node->lvar) return;
+      printf("%s:\n", node->gvar->name);
+      printf("  .zero %d\n", node->gvar->sz);
       push("rax");
       return;
     case ND_DEFN:
@@ -95,12 +120,6 @@ void gen(Node *node) {
       }
       push("rax");
       return;
-    case ND_BLOCK:
-      for (int i=0; i<node->vn->size; i++) {
-        gen(node->vn->node_arr[i]);
-        pop("rax");
-      }
-      return;
     case ND_RETURN:
       gen(node->lhs);
       pop("rax");
@@ -108,6 +127,9 @@ void gen(Node *node) {
       pop("rbp");
       printf("  ret\n");
       return;
+    /**
+     * CONTROL
+     */
     case ND_IF:
       key = yield_key();
       gen(node->cond);
@@ -156,22 +178,17 @@ void gen(Node *node) {
       printf("  jmp .Lbegin%s\n", key);
       printf(".Lend%s:\n", key);
       return;
+    /**
+     * LITERAL
+     */
     case ND_NUM:
       push("%d", node->val);
       return;
-    case ND_LVAR:
-      gen_lval(node);
-      pop("rax");
-      printf("  mov rax, [rax]\n");
-      push("rax");
-      return;
-    case ND_ASSIGN:
-      gen_lval(node->lhs);
-      gen(node->rhs);
-      pop("rdi");
-      pop("rax");
-      printf("  mov [rax], rdi\n");
-      push("rdi");
+    case ND_BLOCK:
+      for (int i=0; i<node->vn->size; i++) {
+        gen(node->vn->node_arr[i]);
+        pop("rax");
+      }
       return;
   }
 

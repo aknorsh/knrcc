@@ -15,7 +15,7 @@ Node *new_node_num(int val) {
   return node;
 }
 
-Node *new_node_defvar(char *name, Type* ty) {
+Node *new_node_def_lvar(char *name, Type* ty) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_DEFV;
 
@@ -26,17 +26,44 @@ Node *new_node_defvar(char *name, Type* ty) {
   return node;
 }
 
-Node *new_node_lvar(char *name) {
+Node *new_node_def_gvar(char *name, Type *ty) {
   Node *node = calloc(1, sizeof(Node));
-  node->kind = ND_LVAR;
-  node->lvar = find_lvar(name);
+  node->kind = ND_DEFV;
 
-  if (!node->lvar) error("Error: Declaration is needed: %s", name);
+  if (find_gvar(name)) error("Error: It is already defined: %s", name);
+
+  node->gvar = add_gvar(name, ty);
+  node->gvar->ty = ty;
+
   return node;
 }
 
-void program();     // = func*
-Node *func();       // = type fname "(" (type ident ("," type ident)* )? ")" "{" stmt* "}"
+Node *new_node_var(char *name) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_LVAR;
+
+  node->lvar = find_lvar(name);
+  node->gvar = find_gvar(name);
+  if (node->lvar) {
+    if (node->lvar->ty->ty == ARRAY) {
+      node = new_node(ND_ADDR, node, NULL);
+    }
+  }
+  else if (node->gvar) {
+    node->kind = ND_GVAR;
+    if (node->lvar->ty->ty == ARRAY) {
+      node = new_node(ND_ADDR, node, NULL);
+    }
+  }
+  else error("Error: Declaration is needed: %s", name);
+
+  return node;
+}
+
+void program();     // = defglobal*
+Node *defglobal();  // = type ident (
+                    // "(" (type ident ("," type ident)* )? ")" "{" stmt* "}"
+                    // ("[" num "]")? ";")
 Node *stmt();       // = expr ";"
                     // | "{" stmt* "}"
                     // | "return" expr ";"
@@ -62,41 +89,47 @@ void program() {
   int i = 0;
   while (!at_eof()) {
     locals = local_variables[i];
-    code[i++] = func();
+    code[i] = defglobal();
+    i = i+1;
   }
   code[i] = NULL;
 }
 
-Node *func() {
+Node *defglobal() {
   Node *node = calloc(1, sizeof(Node));
-  node->kind = ND_DEFN;
 
-  type(); // just discard info about type that fn returns.
+  Type *ty = type(); // just discard info about type that fn returns.
 
-  node->fname = consume_ident();
-  if (node->fname == NULL) {
-    error("Error: Program has to be begin with DEFN.");
+  char *ident = consume_ident();
+  if (!ident) error("Error: Program has to be begin with DEFN.");
+
+  if (consume("(")) { // function route
+    node->kind = ND_DEFN;
+    node->fname = ident;
+    node->args = init_vn();
+    for(;;) {
+      if (at_researved("int")) {
+        Type *ty = type();
+        char *ident = consume_ident();
+        if (!ident)
+          error("Type is needed.");
+        pushback_vn(node->args, new_node_def_lvar(ident, ty));
+      } else break;
+      if(!consume(",")) break;
+    }
+    expect(")");
+    expect("{");
+    node->vn = init_vn();
+    while(!consume("}")) {
+      pushback_vn(node->vn, stmt());
+    }
+  }
+  else { // defvar route
+    Node *node = new_node_def_gvar(ident, ty);
+    expect(";");
+    return node;
   }
 
-  expect("(");
-  node->args = init_vn();
-  for(;;) {
-    if (at_researved("int")) {
-      Type *ty = type();
-      char *ident = consume_ident();
-      if (!ident)
-        error("Type is needed.");
-      pushback_vn(node->args, new_node_defvar(ident, ty));
-    } else break;
-    if(!consume(",")) break;
-  }
-  expect(")");
-
-  expect("{");
-  node->vn = init_vn();
-  while(!consume("}")) {
-    pushback_vn(node->vn, stmt());
-  }
   return node;
 }
 
@@ -178,7 +211,7 @@ Node *expr() {
       expect("]");
     }
 
-    return new_node_defvar(ident, ty);
+    return new_node_def_lvar(ident, ty);
   }
   return assign();
 }
@@ -329,9 +362,13 @@ Node *primary() {
       return node;
     }
     if (consume("[")) {
-      Node *l = new_node_lvar(ident);
+      Node *l = new_node_var(ident);
       int offset;
-      switch (l->lvar->ty->ptr_to->ty) {
+      Node *tmp = l;
+      if (tmp->kind == ND_ADDR)
+        tmp = tmp->lhs;
+
+      switch (tmp->lvar->ty->ptr_to->ty) {
         case INT:
           offset = 4;
           break;
@@ -343,7 +380,7 @@ Node *primary() {
       expect("]");
       return new_node(ND_DEREF, new_node(ND_ADD, l, num), NULL);
     }
-    return new_node_lvar(ident);
+    return new_node_var(ident);
   }
 
   return new_node_num(expect_number());
